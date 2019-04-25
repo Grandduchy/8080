@@ -24,6 +24,7 @@ Flags/Conditional Bits:
     Sign(S), set if result is negative
     Zero(Z), set if result is zero
     Parity(P), checks the amount of 1 bits in a byte, if the total is even P flag is set to 1.
+    Carry(C), sets if operation resulted in carry or required a borrow
     Auxiliary carry(AC or H), used in BCD, also set if the 3rd bit in arithmetric is carried, only used in DAA instruction
 
 Instructions:
