@@ -1,0 +1,43 @@
+These are general notes on how the 8080 cpu works, how much memory, registers, etc.
+8080asm.pdf contains each different instruction in detail.
+General:
+    8-bit single chip CPU
+    78 total instructions to implement
+    65536(0xFFFFH) bytes of memory(RAM) <-- check dis
+    Unlimited Stack space
+    Seven 8-bit registers
+    Program Counter-> where next instruction will be executed
+    Stack Pointer -> pointer to the subroutine and interrupts
+
+Registers:
+    The Program Counter(PC) and Stack Pointer(SP) are both 16-bit
+    7 8-bit Registers, are refered by letter and number are:
+        B(0), C(1), D(2), E(3), H(4), L(5), A(7)
+        A is the accumulator register
+    Some instructions are refered to with pairs with the same letter, There are four pairs:
+        B(B&C), D(D&E), H(H&L) and PSW
+        PSW refers to A register and all flags in the cpu which creates 8 bits.
+        The pairs all form to create a 16 bit instruction.
+
+Flags/Conditional Bits:
+    Exists 5 different flags to indicate results of instructions:
+    Sign(S), set if result is negative
+    Zero(Z), set if result is zero
+    Parity(P), checks the amount of 1 bits in a byte, if the total is even P flag is set to 1.
+    Auxiliary carry(AC or H), used in BCD, also set if the 3rd bit in arithmetric is carried, only used in DAA instruction
+
+Instructions:
+    Instructions can either be 1, 2 or 3 bytes in instructions, it is known from the opcode.
+ 
+Memory map:
+    ROM
+    $0000-$07ff:    invaders.h
+    $0800-$0fff:    invaders.g
+    $1000-$17ff:    invaders.f
+    $1800-$1fff:    invaders.e
+
+    RAM
+    $2000-$23ff:    work RAM
+    $2400-$3fff:    video RAM
+
+    $4000-:         RAM mirror
