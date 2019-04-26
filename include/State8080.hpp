@@ -5,9 +5,9 @@
 #include <array>
 #include <algorithm>
 
-#include "CondtionFlags.hpp"
+#include "ConditionFlags.hpp"
 
-#define RAM 0x100000
+#define RAM 0x10000
 
 struct State8080 {
     State8080(); // defined in hpp because code is short.

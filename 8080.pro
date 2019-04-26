@@ -4,9 +4,11 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        main.cpp \
         src/main.cpp
 
 HEADERS += \
-    include/CondtionFlags.hpp \
+    include/ConditionFlags.hpp \
     include/State8080.hpp
+
+INCLUDEPATH += \
+    include/
