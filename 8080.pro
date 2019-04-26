@@ -12,3 +12,6 @@ HEADERS += \
 
 INCLUDEPATH += \
     include/
+
+RESOURCES += \
+    resources.qrc
