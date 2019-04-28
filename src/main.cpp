@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <iomanip>
 
 #include "State8080.hpp"
 
@@ -31,6 +32,5 @@ int main(int argc, char* argv[]) {
     else {
         std::cout << "Failed write into memory" << std::endl;
     }
-
     return 0;
 }

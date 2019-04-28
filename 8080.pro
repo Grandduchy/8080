@@ -4,6 +4,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
+        src/ConditionFlags.cpp \
+        src/State8080.cpp \
         src/main.cpp
 
 HEADERS += \

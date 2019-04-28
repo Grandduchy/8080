@@ -10,7 +10,7 @@
 #define RAM 0x10000
 
 struct State8080 {
-    State8080(); // defined in hpp because code is short.
+    State8080();
     uint16_t stackPointer;
     uint16_t programCounter;
 
@@ -26,11 +26,5 @@ struct State8080 {
     ConditionFlags condFlags;
 
 };
-
-
-State8080::State8080() {
-    std::fill(memory.begin(), memory.end(), 0);
-}
-
 
 #endif // STATE_H
