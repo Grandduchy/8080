@@ -5,8 +5,6 @@
 
 #include "State8080.hpp"
 
-#define EXECOPCODE(obj, ptr) ((obj).*(ptr))() // executes a pointer to a function member with the object
-
 class Disassembler8080 {
 public:
     using opcodePtr = void (Disassembler8080::*)(); // the type of pointer to opcode member functions
@@ -25,6 +23,9 @@ private:
     void todo(); // an opcode that is currently unimplemented but will eventually be done
 
     // This cpu will only need 50 instructions in order to run invaders.
+    // This cpu also does not affect the AUX flag, it's not needed for invaders, but notes will be put when it should have been set.
+    // The ending extension of an opcode ex D8 or D16 refers to immediate memory; the next byte after the instruction
+    // to be loaded and in for use
     // Opcodes are arranged in numeric order
     void OP_NOP(); // 0x00
     void OP_LXIB_D16(); // 0x01
@@ -72,10 +73,10 @@ private:
     void OP_PUSHH(); // 0xe5
     void OP_ANID8(); // 0xe6
     void OP_XCHG(); // 0xeb
-    void POPPSW(); // 0xf1
-    void PUSHPSW(); // 0xf5
-    void EI(); // 0xfb
-    void CPI_D8(); // 0xfe
+    void OP_POPPSW(); // 0xf1
+    void OP_PUSHPSW(); // 0xf5
+    void OP_EI(); // 0xfb
+    void OP_CPI_D8(); // 0xfe
 };
 
 #endif // DISASSEMBLER8080_HPP

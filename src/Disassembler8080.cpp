@@ -1,10 +1,24 @@
 
 #include <string>
 #include <iostream>
-#include <fstream>
 #include <numeric>
+#include <bitset>
 
 #include "Disassembler8080.hpp"
+
+#define DEBUG
+
+#define EXECOPCODE(obj, ptr) ((obj).*(ptr))() // executes a pointer to a function member with the object
+#define SETZERO(expr) (state.condFlags.zero = (((expr) & 0xff) == 0) ? 1 : 0)
+#define SETSIGN(expr) (state.condFlags.sign = (((expr) & 0x80) != 0) ? 1 : 0 )
+#define SETCARRY(expr) (state.condFlags.carry = (expr) > 0xff)
+// count all bits, if even set flag to 1 if odd set to 0
+// use gnu's optimised function if possible
+#ifdef __GNUC__
+    #define SETPARITY(expr) (state.condFlags.parity = !((__builtin_popcount(expr) & 0x1) == 1))
+#else
+    #define SETPARITY(expr) (state.condFlags.parity = !((( std::bitset<sizeof(decltype(expr)) * 8>(expr).count()) & 0x1 ) == 1 ))
+#endif
 
 Disassembler8080::Disassembler8080() {
     for (auto& opcodePtr : opcodeTable) {
@@ -12,7 +26,9 @@ Disassembler8080::Disassembler8080() {
     }
 
     opcodeTable[0x0] = &Disassembler8080::OP_NOP;
-
+    opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
+    opcodeTable[0x05] = &Disassembler8080::OP_DCRB;
+    opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
 }
 
 
@@ -50,6 +66,27 @@ void Disassembler8080::unimplemented() {
 
 void Disassembler8080::OP_NOP() {
     // no work needed.
+}
+
+// Set pair group B to the next two bytes
+void Disassembler8080::OP_LXIB_D16() {
+    state.c = state.memory[state.programCounter + 1];
+    state.b = state.memory[state.programCounter + 2];
+    state.programCounter += 2;
+}
+
+void Disassembler8080::OP_DCRB() {
+    --state.b;
+    SETZERO(state.b);
+    SETSIGN(state.b);
+    SETPARITY(state.b);
+    // Note that we did not modify AUX flag.
+}
+
+// Set register B to the next byte
+void Disassembler8080::OP_MVIB_D8() {
+    state.b = state.memory[state.programCounter + 1];
+    ++state.programCounter;
 }
 
 
