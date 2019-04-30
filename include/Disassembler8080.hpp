@@ -6,9 +6,6 @@
 class Disassembler8080 {
 public:
 
-    State8080 stateFromFile(const std::string&) const;
-    State8080 stateFromFile(const std::string&, const uint16_t&) const;
-
     void runCycle(State8080&);
 
 };

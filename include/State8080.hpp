@@ -3,13 +3,11 @@
 
 #include <cstdint>
 #include <array>
-#include <algorithm>
 
 #include "ConditionFlags.hpp"
 
-#define RAM 0x10000
-
 struct State8080 {
+
     State8080();
     uint16_t stackPointer;
     uint16_t programCounter;
@@ -22,9 +20,12 @@ struct State8080 {
     uint8_t h;
     uint8_t l;
     uint8_t a; //accumulator register
+    static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
     ConditionFlags condFlags;
-
 };
+
+extern State8080 stateFromFile(const std::string&);
+extern State8080 stateFromFile(const std::string&, const uint16_t&);
 
 #endif // STATE_H
