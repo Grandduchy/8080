@@ -10,6 +10,9 @@ Disassembler8080::Disassembler8080() {
     for (auto& opcodePtr : opcodeTable) {
         opcodePtr = &Disassembler8080::unimplemented;
     }
+
+    opcodeTable[0x0] = &Disassembler8080::OP_NOP;
+
 }
 
 
