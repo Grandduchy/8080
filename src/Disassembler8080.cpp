@@ -31,6 +31,10 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
     opcodeTable[0x09] = &Disassembler8080::OP_DADB;
     opcodeTable[0x0d] = &Disassembler8080::OP_DCRC;
+    opcodeTable[0x0e] = &Disassembler8080::OP_MVIC_D8;
+    opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
+    opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
+    opcodeTable[0x13] = &Disassembler8080::OP_INXD;
 }
 
 
@@ -111,4 +115,26 @@ void Disassembler8080::OP_DCRC() {
     SETPARITY(state.c);
 }
 
+void Disassembler8080::OP_MVIC_D8() {
+    state.c = state.memory[state.programCounter + 1];
+    ++state.programCounter;
+}
+
+void Disassembler8080::OP_RRC() {
+    uint8_t lowestOrderBit = state.a & 0x1;
+    state.a >>= 1;
+    // reference indicates to move the bit to the highest order
+    state.a |= (lowestOrderBit << 7);
+    state.c = (lowestOrderBit == 1);
+}
+
+void Disassembler8080::OP_LXID_D16() {
+    state.e = state.memory[state.programCounter + 1];
+    state.d = state.memory[state.programCounter + 2];
+    state.programCounter += 2;
+}
+
+void Disassembler8080::OP_INXD() {
+
+}
 
