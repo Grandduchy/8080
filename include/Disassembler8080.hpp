@@ -14,7 +14,6 @@ public:
     std::array<opcodePtr, 256> opcodeTable;
 
 private:
-    State8080 state;
 
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done
     void todo(State8080&); // an opcode that is currently unimplemented but will eventually be done
@@ -74,6 +73,14 @@ private:
     void OP_PUSHPSW(State8080&); // 0xf5
     void OP_EI(State8080&); // 0xfb
     void OP_CPI_D8(State8080&); // 0xfe
+
+
+    // functions that perform an opcode's operation using the registers themselves.
+    inline void LXI_D16(State8080&, uint8_t&, uint8_t&);
+    inline void DCR(State8080&, uint8_t&);
+    inline void DAD(State8080&, uint8_t&, uint8_t&);
+    inline void MVI_D8(State8080&, uint8_t&);
+    inline void INX(uint8_t&, uint8_t&);
 };
 
 #endif // DISASSEMBLER8080_HPP

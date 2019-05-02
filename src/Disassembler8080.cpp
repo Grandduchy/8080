@@ -57,6 +57,56 @@ void Disassembler8080::runCycle(State8080& state) {
 }
 
 
+
+// General opcode functions that are done multiple times in each different opcode function
+
+// set register pair to next two bytes
+void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, uint8_t& secondRegPair) {
+    secondRegPair = state.memory[state.programCounter + 1];
+    firstRegPair = state.memory[state.programCounter + 2];
+    state.programCounter += 2;
+}
+
+// Decrement a register
+void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
+    --reg;
+    SETZERO(reg);
+    SETSIGN(reg);
+    SETPARITY(reg);
+    // Note that we did not modify AUX flag.
+}
+
+// Register pair reg1 & reg2 is added to H & L register pair
+void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+    // combine the pairs
+    uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
+    uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint32_t sum = pair + HL;
+    SETCARRY(sum, 0xFFFF);
+    sum &= 0xFFFF;
+    // set H & L to the new sum.
+    state.l = sum & 0x00FF;
+    state.h = (sum & 0xFF00) >> 8;
+}
+
+// set register to next byte
+void Disassembler8080::MVI_D8(State8080& state, uint8_t& reg) {
+    reg = state.memory[state.programCounter + 1];
+    ++state.programCounter;
+}
+
+// A register pair is incrmeented by one and stored into the pair
+void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
+    // combine the registers into a pair
+    uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
+    ++pair;
+    // store into the registers
+    regPair1 = (pair & 0xFF00) >> 8;
+    regPair2 = pair & 0x00FF;
+}
+
+// Opcode functions
+
 void Disassembler8080::todo(State8080& state) {
     UNUSED(state);
 }
@@ -66,6 +116,10 @@ void Disassembler8080::unimplemented(State8080& state) {
     UNUSED(state);
 }
 
+
+
+
+
 void Disassembler8080::OP_NOP(State8080& state) {
     // no work needed.
     UNUSED(state);
@@ -73,48 +127,31 @@ void Disassembler8080::OP_NOP(State8080& state) {
 
 // Set pair group B to the next two bytes
 void Disassembler8080::OP_LXIB_D16(State8080& state) {
-    state.c = state.memory[state.programCounter + 1];
-    state.b = state.memory[state.programCounter + 2];
-    state.programCounter += 2;
+    LXI_D16(state, state.b, state.c);
 }
 
+
+
 void Disassembler8080::OP_DCRB(State8080& state) {
-    --state.b;
-    SETZERO(state.b);
-    SETSIGN(state.b);
-    SETPARITY(state.b);
-    // Note that we did not modify AUX flag.
+    DCR(state, state.b);
+
 }
 
 // Set register B to the next byte
 void Disassembler8080::OP_MVIB_D8(State8080& state) {
-    state.b = state.memory[state.programCounter + 1];
-    ++state.programCounter;
+    MVI_D8(state, state.b);
 }
 
-// Register pair B & C is added to H & L register pair
 void Disassembler8080::OP_DADB(State8080& state) {
-    // combine B & C and H & L
-    uint16_t BC = static_cast<uint16_t>( (static_cast<uint16_t>(state.b) << 8) | state.c);
-    uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
-    uint32_t sum = BC + HL;
-    SETCARRY(sum, 0xFFFF);
-    sum &= 0xFFFF;
-    // set H & L to the new sum.
-    state.l = sum & 0x00FF;
-    state.h = (sum & 0xFF00) >> 8;
+    DAD(state, state.b, state.c);
 }
 
 void Disassembler8080::OP_DCRC(State8080& state) {
-    --state.c;
-    SETZERO(state.c);
-    SETSIGN(state.c);
-    SETPARITY(state.c);
+    DCR(state, state.c);
 }
 
 void Disassembler8080::OP_MVIC_D8(State8080& state) {
-    state.c = state.memory[state.programCounter + 1];
-    ++state.programCounter;
+    MVI_D8(state, state.c);
 }
 
 void Disassembler8080::OP_RRC(State8080& state) {
@@ -126,43 +163,23 @@ void Disassembler8080::OP_RRC(State8080& state) {
 }
 
 void Disassembler8080::OP_LXID_D16(State8080& state) {
-    state.e = state.memory[state.programCounter + 1];
-    state.d = state.memory[state.programCounter + 2];
-    state.programCounter += 2;
+    LXI_D16(state, state.d, state.e);
 }
 
-// Register pair D & E are incremented by one and stored into the pair.
 void Disassembler8080::OP_INXD(State8080& state) {
-    // combine D & E
-    uint16_t DE = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
-    ++DE;
-    // store into the registers
-    state.d = (DE & 0xFF00) >> 8;
-    state.e = DE & 0x00FF;
+    INX(state.d, state.e);
 }
 
 void Disassembler8080::OP_DADD(State8080& state) {
-    uint16_t DE = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
-    uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
-    uint32_t sum = DE + HL;
-    SETCARRY(sum, 0xFFFF);
-    sum &= 0xFFFF;
-    // set H & L to the new sum.
-    state.l = sum & 0x00FF;
-    state.h = (sum & 0xFF00) >> 8;
+    DAD(state, state.d, state.e);
 }
 
 void Disassembler8080::OP_LDAXD(State8080& state) {
     uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
     state.a = state.memory[location];
-
 }
 
-// ?
 void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
-    state.l = state.memory[state.programCounter + 1];
-    state.h = state.memory[state.programCounter + 2];
-    state.programCounter += 2;
-
+    LXI_D16(state, state.h, state.l);
 }
 
