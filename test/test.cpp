@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
         memory[0] = 0x0f;
         state.a = 0xF3;
         dis.runCycle(state);
-        bool passed = state.a == 0x79 && state.condFlags.carry == 1;
+        bool passed = state.a == 0xF9 && state.condFlags.carry == 1;
         if (!passed)
             BOOST_ERROR("0x0f OP_RRC failure a=" + std::to_string(state.a));
     }

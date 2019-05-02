@@ -120,7 +120,7 @@ void Disassembler8080::OP_RRC(State8080& state) {
     state.a >>= 1;
     // reference indicates to move the bit to the highest order
     state.a |= (lowestOrderBit << 7);
-    state.c = (lowestOrderBit == 1);
+    state.condFlags.carry = (lowestOrderBit == 1);
 }
 
 void Disassembler8080::OP_LXID_D16(State8080& state) {
