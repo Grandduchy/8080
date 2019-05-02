@@ -64,6 +64,17 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (!passed)
             BOOST_ERROR("0x09 OP_DAD B failure");
     }
+    {// OP_DAD H 0x29
+    // make sure this doubles the value of h.
+        state.clearAll();
+        memory[0] = 0x29;
+        state.h = 0x06;
+        state.l = 0xA6;
+        dis.runCycle(state);
+        bool passed = state.h == 0x0D && state.l == 0x4C;
+        if (!passed)
+                BOOST_ERROR("0x29 OP_DAD H failure");
+    }
     {// OP_INXD 0x13
         state.clearAll();
         memory[0] = 0x13;
@@ -73,6 +84,16 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         bool passed = state.d == 0x39 && state.e == 0x00;
         if (!passed)
             BOOST_ERROR("0x13 INX D failure");
+    }
+    {// OP LXI SP D16 0x31
+        state.clearAll();
+        memory[0] = 0x31;
+        memory[1]= 0x25;
+        memory[2] = 0xAF;
+        dis.runCycle(state);
+        bool passed = state.stackPointer == 0x25AF;
+        if (!passed)
+            BOOST_ERROR("0x31 LXI SP failure");
     }
 
 }

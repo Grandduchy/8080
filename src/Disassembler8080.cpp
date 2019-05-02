@@ -39,6 +39,11 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x13] = &Disassembler8080::OP_INXD;
     opcodeTable[0x19] = &Disassembler8080::OP_DADD;
     opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
+    opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
+    opcodeTable[0x23] = &Disassembler8080::OP_INXH;
+    opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
+    opcodeTable[0x29] = &Disassembler8080::OP_DADH;
+    opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
 }
 
 
@@ -105,7 +110,12 @@ void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     regPair2 = pair & 0x00FF;
 }
 
-// Opcode functions
+
+
+/********************/
+// Opcode functions //
+/********************/
+
 
 void Disassembler8080::todo(State8080& state) {
     UNUSED(state);
@@ -181,5 +191,26 @@ void Disassembler8080::OP_LDAXD(State8080& state) {
 
 void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
     LXI_D16(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_INXH(State8080& state) {
+    INX(state.h, state.l);
+}
+
+void Disassembler8080::OP_MVIH_D8(State8080& state) {
+    MVI_D8(state, state.h);
+}
+
+void Disassembler8080::OP_DADH(State8080& state) {
+    DAD(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_LXISP_D16(State8080& state) {
+    // the function won't work for this.
+    uint8_t byte1 = state.memory[state.programCounter + 1];
+    uint8_t byte2 = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte1) << 8) | byte2);
+    state.stackPointer = address;
+    state.programCounter += 2;
 }
 
