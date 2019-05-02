@@ -3,7 +3,7 @@
 #include "State8080.hpp"
 #include "Disassembler8080.hpp"
 
-BOOST_AUTO_TEST_CASE( opcode_tests ) {
+BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
     State8080 state;
     std::array<uint8_t, State8080::RAM>& memory = state.memory;
     Disassembler8080 dis;
@@ -63,6 +63,23 @@ BOOST_AUTO_TEST_CASE( opcode_tests ) {
         bool passed = state.h == 0xD5 && state.l == 0x1A && state.condFlags.carry == 0;
         if (!passed)
             BOOST_ERROR("0x09 OP_DAD B failure");
+    }
+
+}
+
+BOOST_AUTO_TEST_CASE( logical_tests) {
+    State8080 state;
+    std::array<uint8_t, State8080::RAM>& memory = state.memory;
+    Disassembler8080 dis;
+
+    {// OP_RRC 0x0f
+        state.clearAll();
+        memory[0] = 0x0f;
+        state.a = 0xF3;
+        dis.runCycle(state);
+        bool passed = state.a == 0x79 && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("0x0f OP_RRC failure a=" + std::to_string(state.a));
     }
 
 }
