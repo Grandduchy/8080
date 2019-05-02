@@ -8,7 +8,7 @@
 
 #define DEBUG
 
-#define EXECOPCODE(obj, ptr) ((obj).*(ptr))() // executes a pointer to a function member with the object
+#define EXECOPCODE(obj, ptr, state) ((obj).*(ptr))(state) // executes a pointer to a function member with the object
 #define SETZERO(expr) (state.condFlags.zero = (((expr) & 0xff) == 0) ? 1 : 0)
 #define SETSIGN(expr) (state.condFlags.sign = (((expr) & 0x80) != 0) ? 1 : 0 )
 #define SETCARRY(expr, maxVal) (state.condFlags.carry = (expr) > (maxVal))
@@ -19,6 +19,8 @@
 #else
     #define SETPARITY(expr) (state.condFlags.parity = !((( std::bitset<sizeof(decltype(expr)) * 8>(expr).count()) & 0x1 ) == 1 ))
 #endif
+
+#define UNUSED(param) (void)(param)
 
 Disassembler8080::Disassembler8080() {
     for (auto& opcodePtr : opcodeTable) {
@@ -38,10 +40,10 @@ Disassembler8080::Disassembler8080() {
 }
 
 
-void Disassembler8080::runCycle() {
+void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     opcodePtr opcodeFunc = opcodeTable[opcode];
-    EXECOPCODE(*this, opcodeFunc);
+    EXECOPCODE(*this, opcodeFunc, state);
     if (opcodeFunc == &Disassembler8080::unimplemented){
 #ifdef DEBUG
         std::cout << opcode;
@@ -53,35 +55,28 @@ void Disassembler8080::runCycle() {
 }
 
 
-
-void Disassembler8080::setState(const State8080& state) {
-    this->state = state;
-}
-State8080 Disassembler8080::getState() const {
-    return state;
+void Disassembler8080::todo(State8080& state) {
+    UNUSED(state);
 }
 
-
-void Disassembler8080::todo() {
-
-}
-
-void Disassembler8080::unimplemented() {
+void Disassembler8080::unimplemented(State8080& state) {
     std::cout << "Unimplemented Instruction ";
+    UNUSED(state);
 }
 
-void Disassembler8080::OP_NOP() {
+void Disassembler8080::OP_NOP(State8080& state) {
     // no work needed.
+    UNUSED(state);
 }
 
 // Set pair group B to the next two bytes
-void Disassembler8080::OP_LXIB_D16() {
+void Disassembler8080::OP_LXIB_D16(State8080& state) {
     state.c = state.memory[state.programCounter + 1];
     state.b = state.memory[state.programCounter + 2];
     state.programCounter += 2;
 }
 
-void Disassembler8080::OP_DCRB() {
+void Disassembler8080::OP_DCRB(State8080& state) {
     --state.b;
     SETZERO(state.b);
     SETSIGN(state.b);
@@ -90,13 +85,13 @@ void Disassembler8080::OP_DCRB() {
 }
 
 // Set register B to the next byte
-void Disassembler8080::OP_MVIB_D8() {
+void Disassembler8080::OP_MVIB_D8(State8080& state) {
     state.b = state.memory[state.programCounter + 1];
     ++state.programCounter;
 }
 
 // Register pair B & C is added to H & L register pair
-void Disassembler8080::OP_DADB() {
+void Disassembler8080::OP_DADB(State8080& state) {
     // combine B & C and H & L
     uint16_t BC = static_cast<uint16_t>( (static_cast<uint16_t>(state.b) << 8) | state.c);
     uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
@@ -108,19 +103,19 @@ void Disassembler8080::OP_DADB() {
     state.h = (sum & 0xFF00) >> 8;
 }
 
-void Disassembler8080::OP_DCRC() {
+void Disassembler8080::OP_DCRC(State8080& state) {
     --state.c;
     SETZERO(state.c);
     SETSIGN(state.c);
     SETPARITY(state.c);
 }
 
-void Disassembler8080::OP_MVIC_D8() {
+void Disassembler8080::OP_MVIC_D8(State8080& state) {
     state.c = state.memory[state.programCounter + 1];
     ++state.programCounter;
 }
 
-void Disassembler8080::OP_RRC() {
+void Disassembler8080::OP_RRC(State8080& state) {
     uint8_t lowestOrderBit = state.a & 0x1;
     state.a >>= 1;
     // reference indicates to move the bit to the highest order
@@ -128,13 +123,13 @@ void Disassembler8080::OP_RRC() {
     state.c = (lowestOrderBit == 1);
 }
 
-void Disassembler8080::OP_LXID_D16() {
+void Disassembler8080::OP_LXID_D16(State8080& state) {
     state.e = state.memory[state.programCounter + 1];
     state.d = state.memory[state.programCounter + 2];
     state.programCounter += 2;
 }
 
-void Disassembler8080::OP_INXD() {
+void Disassembler8080::OP_INXD(State8080& state) {
 
 }
 
