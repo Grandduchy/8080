@@ -64,6 +64,16 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (!passed)
             BOOST_ERROR("0x09 OP_DAD B failure");
     }
+    {// OP_INXD 0x13
+        state.clearAll();
+        memory[0] = 0x13;
+        state.d = 0x38;
+        state.e = 0xff;
+        dis.runCycle(state);
+        bool passed = state.d == 0x39 && state.e == 0x00;
+        if (!passed)
+            BOOST_ERROR("0x13 INX D failure");
+    }
 
 }
 

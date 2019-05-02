@@ -37,6 +37,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
     opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
     opcodeTable[0x13] = &Disassembler8080::OP_INXD;
+    opcodeTable[0x19] = &Disassembler8080::OP_DADD;
 }
 
 
@@ -129,7 +130,24 @@ void Disassembler8080::OP_LXID_D16(State8080& state) {
     state.programCounter += 2;
 }
 
+// Register pair D & E are incremented by one and stored into the pair.
 void Disassembler8080::OP_INXD(State8080& state) {
+    // combine D & E
+    uint16_t DE = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
+    ++DE;
+    // store into the registers
+    state.d = (DE & 0xFF00) >> 8;
+    state.e = DE & 0x00FF;
+}
 
+void Disassembler8080::OP_DADD(State8080& state) {
+    uint16_t DE = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
+    uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint32_t sum = DE + HL;
+    SETCARRY(sum, 0xFFFF);
+    sum &= 0xFFFF;
+    // set H & L to the new sum.
+    state.l = sum & 0x00FF;
+    state.h = (sum & 0xFF00) >> 8;
 }
 
