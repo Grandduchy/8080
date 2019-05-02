@@ -93,3 +93,22 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
     }
 
 }
+
+BOOST_AUTO_TEST_CASE( other_tests) {
+    State8080 state;
+    std::array<uint8_t, State8080::RAM>& memory = state.memory;
+    Disassembler8080 dis;
+
+    {// OP_LDAX D 0x1a
+        state.clearAll();
+        memory[0] = 0x1a;
+        memory[0x938B] = 0xFF;
+        state.d = 0x93;
+        state.e = 0x8B;
+        dis.runCycle(state);
+        if (state.a != 0xFF)
+            BOOST_ERROR("0x1a OP_LDAX D failure, a=" + std::to_string(state.a));
+    }
+
+
+}

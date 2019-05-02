@@ -38,6 +38,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
     opcodeTable[0x13] = &Disassembler8080::OP_INXD;
     opcodeTable[0x19] = &Disassembler8080::OP_DADD;
+    opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
 }
 
 
@@ -149,5 +150,19 @@ void Disassembler8080::OP_DADD(State8080& state) {
     // set H & L to the new sum.
     state.l = sum & 0x00FF;
     state.h = (sum & 0xFF00) >> 8;
+}
+
+void Disassembler8080::OP_LDAXD(State8080& state) {
+    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
+    state.a = state.memory[location];
+
+}
+
+// ?
+void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
+    state.l = state.memory[state.programCounter + 1];
+    state.h = state.memory[state.programCounter + 2];
+    state.programCounter += 2;
+
 }
 
