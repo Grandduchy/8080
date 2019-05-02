@@ -8,6 +8,35 @@ State8080::State8080() {
     std::fill(memory.begin(), memory.end(), 0);
 }
 
+void State8080::clearMemory() {
+    std::fill(memory.begin(), memory.end(), 0);
+}
+void State8080::clearRegisters() {
+    a = 0;
+    b = 0;
+    c = 0;
+    d = 0;
+    e = 0;
+    h = 0;
+    l = 0;
+}
+
+void State8080::clearSpecial() {
+    stackPointer = 0;
+    programCounter = 0;
+}
+
+void State8080::clearFlags() {
+    condFlags.clear();
+}
+
+void State8080::clearAll() {
+    clearMemory();
+    clearRegisters();
+    clearSpecial();
+    clearFlags();
+}
+
 
 State8080 stateFromFile(const std::string& fname, const uint16_t& memoryStart = 0){
 

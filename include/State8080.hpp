@@ -23,6 +23,12 @@ struct State8080 {
     static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
     ConditionFlags condFlags;
+
+    void clearMemory();
+    void clearRegisters();
+    void clearSpecial();
+    void clearFlags();
+    void clearAll();
 };
 
 extern State8080 stateFromFile(const std::string&);

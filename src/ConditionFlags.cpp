@@ -29,3 +29,11 @@ void ConditionFlags::fromBitSet(const std::bitset<8>& set) noexcept{
     sign = set[7];
 
 }
+
+void ConditionFlags::clear() {
+    carry = 0;
+    parity = 0;
+    auxCarry = 0;
+    zero = 0;
+    sign = 0;
+}

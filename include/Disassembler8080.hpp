@@ -13,8 +13,10 @@ public:
     void runCycle();
     std::array<opcodePtr, 256> opcodeTable;
 
+    // TODO, state shouldn't be in here...
     void setState(const State8080&);
     State8080 getState() const;
+    State8080& modifyState() {return state;}
 
 private:
     State8080 state;

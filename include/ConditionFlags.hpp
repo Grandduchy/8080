@@ -15,6 +15,7 @@ struct ConditionFlags {
 
     std::bitset<8> makeBitSet() const noexcept;
     void fromBitSet(const std::bitset<8>&) noexcept;
+    void clear();
 };
 
 #endif // CONDTIONFLAGS_HPP
