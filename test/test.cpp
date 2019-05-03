@@ -124,6 +124,23 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
         if (!passed)
             BOOST_ERROR("0x0f OP_RRC failure a=" + std::to_string(state.a));
     }
+    {// OP_ANAA 0xA7
+        state.clearAll();
+        memory[0] = 0xA7;
+        state.a = 0xFA;
+        dis.runCycle(state);
+        if (state.a != 0xFA && state.condFlags.carry != 0)
+            BOOST_ERROR("0xA7 OP ANA A failure");
+    }
+    {// OP_XRAA 0xAF
+        state.clearAll();
+        memory[0] = 0xAF;
+        state.a = 0xB9;
+        dis.runCycle(state);
+        if (state.a != 0 && state.condFlags.carry != 0)
+            BOOST_ERROR("0xAF OP XRA A failure");
+
+    }
 
 }
 

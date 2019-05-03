@@ -58,6 +58,9 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x7B] = &Disassembler8080::OP_MOVA_E;
     opcodeTable[0x7C] = &Disassembler8080::OP_MOVA_H;
     opcodeTable[0x7E] = &Disassembler8080::OP_MOVA_M;
+
+    opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
+    opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
 }
 
 
@@ -309,3 +312,18 @@ void Disassembler8080::OP_MOVA_M(State8080& state) {// 0x7e
     MOV(state, state.a);
 }
 
+void Disassembler8080::OP_ANAA(State8080& state) {
+    state.a &= state.a;
+    SETPARITY(state.a);
+    SETZERO(state.a);
+    SETSIGN(state.a); // <- ?
+    state.condFlags.carry = 0;
+}
+
+void Disassembler8080::OP_XRAA(State8080& state) {
+    state.a ^= state.a;
+    SETPARITY(state.a);
+    SETZERO(state.a);
+    SETSIGN(state.a); // <- ?
+    state.condFlags.carry = 0;
+}
