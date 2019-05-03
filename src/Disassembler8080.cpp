@@ -44,6 +44,10 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
     opcodeTable[0x29] = &Disassembler8080::OP_DADH;
     opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
+    opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
+    opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
+    opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
+    opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
 }
 
 
@@ -109,9 +113,16 @@ void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     regPair1 = (pair & 0xFF00) >> 8;
     regPair2 = pair & 0x00FF;
 }
+/*
+// A register from src is loaded into dst, either of them can be memory addresses.
+// for now and for simplicity there is only one instruction that uses the memory location
+// H & L as a dst (0x77), and will throw for now
+inline void MOV(State8080& state, uint8_t& dst, uint8_t& src) {
+    if (state.memory[state.programCounter] == 0x77)
+        throw std::runtime_error("0x77 must not use this function.");
 
-
-
+}
+*/
 /********************/
 // Opcode functions //
 /********************/
@@ -212,5 +223,33 @@ void Disassembler8080::OP_LXISP_D16(State8080& state) {
     uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte1) << 8) | byte2);
     state.stackPointer = address;
     state.programCounter += 2;
+}
+
+// store address of the accumulator to memory location at next two bytes.
+void Disassembler8080::OP_STA_ADR(State8080& state) {
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.memory[address] = state.a;
+    state.programCounter += 2;
+}
+
+void Disassembler8080::OP_MVIM_D8(State8080& state) {
+    // function won't work for this, store the byte into some location denoted by H & l pair
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
+    state.memory[address] = state.memory[state.programCounter + 1];
+    ++state.programCounter;
+}
+
+void Disassembler8080::OP_LDA_ADR(State8080& state) {
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.a = state.memory[address];
+    state.programCounter += 2;
+}
+
+void Disassembler8080::OP_MVIA_D8(State8080& state) {
+    MVI_D8(state, state.a);
 }
 

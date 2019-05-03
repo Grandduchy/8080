@@ -95,7 +95,19 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (!passed)
             BOOST_ERROR("0x31 LXI SP failure");
     }
+    {// OP MVIM D8 0x36
+        state.clearAll();
+        state.h = 0xAF;
+        state.l = 0xC4;
+        memory[0] = 0x36;
+        memory[1] = 0xAA;
+        memory[0xAFC4] = 0xFF;
+        dis.runCycle(state);
+        if(memory[0xAFC4] != 0xAA)
+            BOOST_ERROR("0x36 MVIM D8 failure");
 
+
+    }
 }
 
 BOOST_AUTO_TEST_CASE( logical_tests) {
@@ -130,6 +142,27 @@ BOOST_AUTO_TEST_CASE( other_tests) {
         if (state.a != 0xFF)
             BOOST_ERROR("0x1a OP_LDAX D failure, a=" + std::to_string(state.a));
     }
+    { // OP_STA ADR 0x32
+        state.clearAll();
+        state.a = 0xFF;
+        memory[0] = 0x32;
+        memory[1] = 0xA7;
+        memory[2] = 0xE2;
+        dis.runCycle(state);
+        if (memory[0xE2A7] != state.a)
+            BOOST_ERROR("0x32 OP_STA ADR failure");
+    }
+    { // OP_LDA ADR 0x3A
+        state.clearAll();
+        state.a = 0xF0;
+        memory[0] = 0x3A;
+        memory[1] = 0x4A;
+        memory[2] = 0xCC;
+        memory[0xCC4A] = 0xA2;
+        dis.runCycle(state);
+        if (state.a != 0xA2)
+            BOOST_ERROR("0xA2 OP LDA ADR failure");
 
+    }
 
 }
