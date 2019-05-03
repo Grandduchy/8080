@@ -48,6 +48,16 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
     opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
+    opcodeTable[0x56] = &Disassembler8080::OP_MOVD_M;
+
+    opcodeTable[0x5E] = &Disassembler8080::OP_MOVE_M;
+    opcodeTable[0x66] = &Disassembler8080::OP_MOVH_M;
+    opcodeTable[0x6F] = &Disassembler8080::OP_MOVL_A;
+    opcodeTable[0x77] = &Disassembler8080::OP_MOVM_A;
+    opcodeTable[0x7A] = &Disassembler8080::OP_MOVA_D;
+    opcodeTable[0x7B] = &Disassembler8080::OP_MOVA_E;
+    opcodeTable[0x7C] = &Disassembler8080::OP_MOVA_H;
+    opcodeTable[0x7E] = &Disassembler8080::OP_MOVA_M;
 }
 
 
@@ -70,14 +80,14 @@ void Disassembler8080::runCycle(State8080& state) {
 // General opcode functions that are done multiple times in each different opcode function
 
 // set register pair to next two bytes
-void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, uint8_t& secondRegPair) {
+inline void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, uint8_t& secondRegPair) {
     secondRegPair = state.memory[state.programCounter + 1];
     firstRegPair = state.memory[state.programCounter + 2];
     state.programCounter += 2;
 }
 
 // Decrement a register
-void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
+inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
     --reg;
     SETZERO(reg);
     SETSIGN(reg);
@@ -86,7 +96,7 @@ void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
 }
 
 // Register pair reg1 & reg2 is added to H & L register pair
-void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
     // combine the pairs
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
@@ -99,13 +109,13 @@ void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair
 }
 
 // set register to next byte
-void Disassembler8080::MVI_D8(State8080& state, uint8_t& reg) {
+inline void Disassembler8080::MVI_D8(State8080& state, uint8_t& reg) {
     reg = state.memory[state.programCounter + 1];
     ++state.programCounter;
 }
 
 // A register pair is incrmeented by one and stored into the pair
-void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
+inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     // combine the registers into a pair
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     ++pair;
@@ -113,16 +123,25 @@ void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     regPair1 = (pair & 0xFF00) >> 8;
     regPair2 = pair & 0x00FF;
 }
-/*
+
 // A register from src is loaded into dst, either of them can be memory addresses.
 // for now and for simplicity there is only one instruction that uses the memory location
 // H & L as a dst (0x77), and will throw for now
-inline void MOV(State8080& state, uint8_t& dst, uint8_t& src) {
+inline void Disassembler8080::MOV(State8080& state, uint8_t& dst, uint8_t& src) {
     if (state.memory[state.programCounter] == 0x77)
         throw std::runtime_error("0x77 must not use this function.");
-
+    dst = src;
 }
-*/
+
+// This function is only used for the H & L pair memory location as a src.
+inline void Disassembler8080::MOV(State8080& state, uint8_t& dst) {
+    if (state.memory[state.programCounter] == 0x77)
+        throw std::runtime_error("0x77 must not use this function.");
+    // get the address
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    dst = state.memory[HL];
+}
+
 /********************/
 // Opcode functions //
 /********************/
@@ -251,5 +270,42 @@ void Disassembler8080::OP_LDA_ADR(State8080& state) {
 
 void Disassembler8080::OP_MVIA_D8(State8080& state) {
     MVI_D8(state, state.a);
+}
+
+void Disassembler8080::OP_MOVD_M(State8080& state) {// 0x56
+    MOV(state, state.d);
+}
+
+void Disassembler8080::OP_MOVE_M(State8080& state) {// 0x5e
+    MOV(state, state.e);
+}
+
+void Disassembler8080::OP_MOVH_M(State8080& state) {// 0x66
+    MOV(state, state.h);
+}
+
+void Disassembler8080::OP_MOVL_A(State8080& state) {// 0x6f
+    MOV(state, state.l, state.a);
+}
+
+void Disassembler8080::OP_MOVM_A(State8080& state) {// 0x77
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    state.memory[HL] = state.a;
+}
+
+void Disassembler8080::OP_MOVA_D(State8080& state) {// 0x7a
+    MOV(state, state.a, state.d);
+}
+
+void Disassembler8080::OP_MOVA_E(State8080& state) {// 0x7b
+    MOV(state, state.a, state.e);
+}
+
+void Disassembler8080::OP_MOVA_H(State8080& state) {// 0x7c
+    MOV(state, state.a, state.h);
+}
+
+void Disassembler8080::OP_MOVA_M(State8080& state) {// 0x7e
+    MOV(state, state.a);
 }
 

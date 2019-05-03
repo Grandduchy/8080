@@ -164,5 +164,29 @@ BOOST_AUTO_TEST_CASE( other_tests) {
             BOOST_ERROR("0xA2 OP LDA ADR failure");
 
     }
+    { // MOV tests
+        state.clearAll();
+        // test special 0x77
+        memory[0] = 0x77;
+        state.h = 0x2B;
+        state.l = 0xE9;
+        state.a = 0xAF;
+        memory[0x2BE9] = 0xFF;
+        dis.runCycle(state);
+        if (memory[0x2BE9] != state.a)
+            BOOST_ERROR("0x77 OP MOV M,A failure");
+        // test 0x56
+        memory[1] = 0x56;
+        memory[0x2BE9] = 0x0A;
+        dis.runCycle(state);
+        if (state.d != 0x0A)
+            BOOST_ERROR("0x56 OP MOV D,M failure");
+        // test 0x6F
+        memory[2] = 0x6F;
+        state.l = 0xEB;
+        dis.runCycle(state);
+        if (state.l != state.a)
+            BOOST_ERROR("0x6F OP MOV L,A failure");
+    }
 
 }
