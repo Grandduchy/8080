@@ -65,6 +65,7 @@ private:
     void OP_POPD(State8080&); // 0xd1
     void OP_OUTD8(State8080&); // 0xd3
     void OP_PUSHD(State8080&); //0xd5
+    void OP_IND8(State8080&); // 0xDB , this function may not be needed
     void OP_POPH(State8080&); // 0xe1
     void OP_PUSHH(State8080&); // 0xe5
     void OP_ANID8(State8080&); // 0xe6

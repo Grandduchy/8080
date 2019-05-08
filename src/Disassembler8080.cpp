@@ -70,6 +70,12 @@ Disassembler8080::Disassembler8080() {
 
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
     opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
+
+    opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
+    opcodeTable[0xD3] = &Disassembler8080::todo;
+    opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
+    opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
+    opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
 }
 
 
@@ -174,6 +180,7 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
 
 
 void Disassembler8080::todo(State8080& state) {
+    std::cout << "Instruction marked as to do \n";
     UNUSED(state);
 }
 
@@ -411,3 +418,19 @@ void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
     state.programCounter = newAddress;
     --state.programCounter; // inverse the increment of the program counter
  }
+
+void Disassembler8080::OP_POPD(State8080& state) {
+    POP(state, state.d, state.e);
+}
+
+void Disassembler8080::OP_PUSHD(State8080& state) {
+    PUSH(state, state.d, state.e);
+}
+
+void Disassembler8080::OP_POPH(State8080& state) {
+    POP(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_PUSHH(State8080& state) {
+    PUSH(state, state.h, state.l);
+}
