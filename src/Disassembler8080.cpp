@@ -76,6 +76,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
+    opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
 }
 
 
@@ -433,4 +434,14 @@ void Disassembler8080::OP_POPH(State8080& state) {
 
 void Disassembler8080::OP_PUSHH(State8080& state) {
     PUSH(state, state.h, state.l);
+}
+
+// perform binary and with next byte with the accumulator
+void Disassembler8080::OP_ANID8(State8080& state) {
+    state.a &= state.memory[state.programCounter + 1];
+    state.condFlags.carry = 0;
+    SETPARITY(state.a);
+    SETZERO(state.a);
+    SETSIGN(state.a);
+    ++state.programCounter;
 }

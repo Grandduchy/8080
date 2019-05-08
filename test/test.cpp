@@ -117,6 +117,15 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (!passed)
             BOOST_ERROR("0xC6 ADI D8 failure");
     }
+    {// OP ANI D8 0xE6
+        state.clearAll();
+        memory[0] = 0xE6;
+        state.a = 0x3A;
+        memory[1] = 0x0F;
+        dis.runCycle(state);
+        if (state.a != 0x0A)
+            BOOST_ERROR("0xE6 ANI D8 failure");
+    }
 }
 
 BOOST_AUTO_TEST_CASE( logical_tests) {
