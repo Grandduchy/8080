@@ -212,6 +212,29 @@ BOOST_AUTO_TEST_CASE( branch_tests) {
             BOOST_ERROR("JNZ failure");
 
     }
+    { // RET & CALLADR 0xC9 & 0xCD
+        state.clearAll();
+        state.stackPointer = 0xE000;
+        memory.fill(0x03); // fill will opcode that will indicate an unimplemented instruction
+        state.programCounter = 0x10;
+        memory[0x10] = 0xCD; // CALLADR
+        memory[0x11] = 0xA3;
+        memory[0x12] = 0x0B;
+        memory[0x13] = 0xEE;
+        memory[0x0BA3] = 0xFF; // 0x0BA3 will be the subroutine we will call to.
+        memory[0x0BA3 + 1] = 0xC9; // RET
+        dis.runCycle(state);
+        bool passed = memory[state.programCounter] == 0xFF // check if it jumped
+                && memory[state.stackPointer] == 0x13 - 1 // check if lowest bit is set to return addr.
+                && memory[state.stackPointer + 1] == 0; // check if highest, program counter is incremnted on return to become 0x13
+        if (!passed)
+            BOOST_FAIL("RET and CALLADR failure, cannot continue next test");
+        ++state.programCounter; // skip the 0xFF
+        dis.runCycle(state);
+        if (memory[state.programCounter] != 0xEE)
+            BOOST_ERROR("RET failure");
+
+    }
 }
 
 BOOST_AUTO_TEST_CASE( other_tests) {

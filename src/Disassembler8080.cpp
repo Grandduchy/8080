@@ -66,8 +66,10 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
     opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
-
     opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
+
+    opcodeTable[0xC9] = &Disassembler8080::OP_RET;
+    opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
 }
 
 
@@ -378,6 +380,7 @@ void Disassembler8080::OP_PUSHB(State8080& state) {
     PUSH(state, state.b, state.c);
 }
 
+// set accumulator to next byte
 void Disassembler8080::OP_ADID8(State8080& state) {
     uint16_t sum = state.a + state.memory[state.programCounter + 1];
     SETZERO(sum);
@@ -388,3 +391,23 @@ void Disassembler8080::OP_ADID8(State8080& state) {
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
+
+// return from a subroutine
+void Disassembler8080::OP_RET(State8080& state) {
+    // pop the old address from the stack
+    state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
+    state.stackPointer += 2;
+    // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
+}
+
+// call a subroutine
+void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
+    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
+    // store the old address to the stack, it's pushed onto the stack
+    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    state.programCounter = newAddress;
+    --state.programCounter; // inverse the increment of the program counter
+ }
