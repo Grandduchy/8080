@@ -105,8 +105,17 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         dis.runCycle(state);
         if(memory[0xAFC4] != 0xAA)
             BOOST_ERROR("0x36 MVIM D8 failure");
-
-
+    }
+    {// OP ADI D8 0xC6
+        state.clearAll();
+        state.a = 0x56;
+        memory[0] = 0xC6;
+        memory[1] = 0xBE;
+        dis.runCycle(state);
+        bool passed = state.a == 0x14 && state.condFlags.carry == state.condFlags.parity && state.condFlags.carry == 1
+                && state.condFlags.zero == 0 && state.condFlags.sign == 0;
+        if (!passed)
+            BOOST_ERROR("0xC6 ADI D8 failure");
     }
 }
 

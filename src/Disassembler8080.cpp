@@ -15,9 +15,9 @@
 // count all bits, if sum is even set flag to 1 if odd set to 0
 // use gnu's optimised function if possible
 #ifdef __GNUC__
-    #define SETPARITY(expr) (state.condFlags.parity = !((__builtin_popcount(expr) & 0x1) == 1))
+    #define SETPARITY(expr) (state.condFlags.parity = !((__builtin_popcount(expr & 0xFF) & 0x1) == 1))
 #else
-    #define SETPARITY(expr) (state.condFlags.parity = !((( std::bitset<sizeof(decltype(expr)) * 8>(expr).count()) & 0x1 ) == 1 ))
+    #define SETPARITY(expr) (state.condFlags.parity = !((( std::bitset<sizeof(decltype(expr)) * 8>(expr & 0xFF).count()) & 0x1 ) == 1 ))
 #endif
 
 #define UNUSED(param) (void)(param)
@@ -61,12 +61,13 @@ Disassembler8080::Disassembler8080() {
 
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
-    opcodeTable[0xC1] = &Disassembler8080::OP_POPB;
 
+    opcodeTable[0xC1] = &Disassembler8080::OP_POPB;
     opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
     opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
 
+    opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
 }
 
 
@@ -375,4 +376,15 @@ void Disassembler8080::OP_JMPADR(State8080& state) {
 
 void Disassembler8080::OP_PUSHB(State8080& state) {
     PUSH(state, state.b, state.c);
+}
+
+void Disassembler8080::OP_ADID8(State8080& state) {
+    uint16_t sum = state.a + state.memory[state.programCounter + 1];
+    SETZERO(sum);
+    SETPARITY(sum);
+    SETSIGN(sum);
+    SETCARRY(sum, 0xFF);
+    // aux carry would have been set here.
+    state.a = 0xFF & sum;
+    ++state.programCounter;
 }
