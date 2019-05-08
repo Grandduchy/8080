@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <array>
-#include <deque>
 
 #include "ConditionFlags.hpp"
 
@@ -24,7 +23,6 @@ struct State8080 {
     static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
     ConditionFlags condFlags;
-    std::deque<uint16_t> stack;
 
     void clearMemory();
     void clearRegisters();
