@@ -83,6 +83,8 @@ private:
     inline void INX(uint8_t&, uint8_t&);
     inline void MOV(State8080&, uint8_t& dst, uint8_t& src);
     inline void MOV(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
+    inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
+    inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
 };
 
 #endif // DISASSEMBLER8080_HPP

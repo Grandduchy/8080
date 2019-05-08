@@ -61,6 +61,12 @@ Disassembler8080::Disassembler8080() {
 
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
+    opcodeTable[0xC1] = &Disassembler8080::OP_POPB;
+
+    opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
+    opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
+    opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
+
 }
 
 
@@ -145,6 +151,20 @@ inline void Disassembler8080::MOV(State8080& state, uint8_t& dst) {
     dst = state.memory[HL];
 }
 
+// Pop memory in the stack to the register pair regPair1 & regPair2
+inline void Disassembler8080::POP(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+    regPair2 = state.memory[state.stackPointer];
+    regPair1 = state.memory[state.stackPointer + 1];
+    state.stackPointer += 2;
+}
+
+// Push the register pair into the stack
+inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+    state.memory[state.stackPointer - 1] = regPair1;
+    state.memory[state.stackPointer - 2] = regPair2;
+    state.stackPointer -= 2;
+}
+
 /********************/
 // Opcode functions //
 /********************/
@@ -155,7 +175,7 @@ void Disassembler8080::todo(State8080& state) {
 }
 
 void Disassembler8080::unimplemented(State8080& state) {
-    std::cout << "Unimplemented Instruction ";
+    std::cout << "Unimplemented Instruction \n";
     UNUSED(state);
 }
 
@@ -263,6 +283,7 @@ void Disassembler8080::OP_MVIM_D8(State8080& state) {
     ++state.programCounter;
 }
 
+// Set accumulator to the memory stored by the address of the next two bytes
 void Disassembler8080::OP_LDA_ADR(State8080& state) {
     uint8_t lowByte = state.memory[state.programCounter + 1];
     uint8_t highByte = state.memory[state.programCounter + 2];
@@ -291,6 +312,7 @@ void Disassembler8080::OP_MOVL_A(State8080& state) {// 0x6f
     MOV(state, state.l, state.a);
 }
 
+// set accumulator to data pointed by HL
 void Disassembler8080::OP_MOVM_A(State8080& state) {// 0x77
     uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
     state.memory[HL] = state.a;
@@ -312,6 +334,7 @@ void Disassembler8080::OP_MOVA_M(State8080& state) {// 0x7e
     MOV(state, state.a);
 }
 
+// Perform binary and with a and a
 void Disassembler8080::OP_ANAA(State8080& state) {
     state.a &= state.a;
     SETPARITY(state.a);
@@ -320,10 +343,36 @@ void Disassembler8080::OP_ANAA(State8080& state) {
     state.condFlags.carry = 0;
 }
 
+// Perform binary xor with a and a
 void Disassembler8080::OP_XRAA(State8080& state) {
     state.a ^= state.a;
     SETPARITY(state.a);
     SETZERO(state.a);
     SETSIGN(state.a); // <- ?
     state.condFlags.carry = 0;
+}
+
+
+void Disassembler8080::OP_POPB(State8080& state) {
+    POP(state, state.b, state.c);
+}
+// jump to the address if the zero bit is zero
+void Disassembler8080::OP_JNZADR(State8080& state) {
+    if (state.condFlags.zero == 0)
+        OP_JMPADR(state);
+    else // jump is not taken
+        state.programCounter += 2;
+}
+
+// jump to address
+void Disassembler8080::OP_JMPADR(State8080& state) {
+    uint8_t lowAdd = state.memory[state.programCounter + 1];
+    uint8_t hiAdd = state.memory[state.programCounter + 2];
+    uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
+    state.programCounter = addr;
+    --state.programCounter; // program counter will automatically be incremented, so do the inverse
+}
+
+void Disassembler8080::OP_PUSHB(State8080& state) {
+    PUSH(state, state.b, state.c);
 }

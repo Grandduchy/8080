@@ -144,6 +144,67 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
 
 }
 
+BOOST_AUTO_TEST_CASE( stack_tests ) {
+    State8080 state;
+    std::array<uint8_t, State8080::RAM>& memory = state.memory;
+    Disassembler8080 dis;
+    {// OP_POP B 0xc1
+        state.clearAll();
+        memory[0] = 0xC1;
+        state.stackPointer = 0x1508;
+        memory[0x1508] = 0x33;
+        memory[0x1509] = 0x0B;
+        dis.runCycle(state);
+        bool passed = state.stackPointer == 0x1508 + 2 && state.b == 0x0B && state.c == 0x33;
+        if (!passed)
+            BOOST_ERROR("0xC1 OP POP B failure");
+
+    }
+    {// OP_PUSH B 0xC5
+        state.clearAll();
+        memory[0] = 0xC5;
+        state.b = 0x8F;
+        state.c = 0x9D;
+        state.stackPointer = 0x3A2C;
+        dis.runCycle(state);
+        // note that there is an error in the example in the manual, SP is suppost to be 0x3A2A instead of 0x3A3A.
+        bool passed = state.stackPointer == 0x3A2A && state.memory[state.stackPointer] == 0x9D
+                && state.memory[0x3A2B] == 0x8F;
+        if (!passed)
+            BOOST_ERROR("0xC5 OP PUSH B failure");
+
+
+    }
+}
+
+BOOST_AUTO_TEST_CASE( branch_tests) {
+    State8080 state;
+    std::array<uint8_t, State8080::RAM>& memory = state.memory;
+    Disassembler8080 dis;
+    { // JMP & JNZ 0xC2
+        state.clearAll();
+        uint16_t jump = 0xFA2B;
+        state.condFlags.zero = 1;
+        memory[0] = 0xC2;
+        memory[1] = 0x2B;
+        memory[2] = 0xFA;
+        memory[3] = 0xFF;
+        memory[jump] = 0xAA;
+        dis.runCycle(state);
+        if (memory[state.programCounter] != 0xFF)
+            BOOST_FAIL("JNZ and JMP opcode failure, cannot continue next test");
+        state.condFlags.zero = 0;
+        ++state.programCounter;
+        memory[4] = 0xC2;
+        memory[5] = 0x2B;
+        memory[6] = 0xFA;
+        dis.runCycle(state);
+        if (memory[state.programCounter] != 0xAA)
+            BOOST_ERROR("JNZ failure");
+
+    }
+}
+
 BOOST_AUTO_TEST_CASE( other_tests) {
     State8080 state;
     std::array<uint8_t, State8080::RAM>& memory = state.memory;
@@ -207,3 +268,5 @@ BOOST_AUTO_TEST_CASE( other_tests) {
     }
 
 }
+
+
