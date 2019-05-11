@@ -15,6 +15,8 @@ struct ConditionFlags {
 
     std::bitset<8> makeBitSet() const noexcept;
     void fromBitSet(const std::bitset<8>&) noexcept;
+    uint8_t makePSW() const noexcept;
+    void fromPSW(const uint8_t&) noexcept;
     void clear();
 };
 

@@ -30,6 +30,23 @@ void ConditionFlags::fromBitSet(const std::bitset<8>& set) noexcept{
 
 }
 
+uint8_t ConditionFlags::makePSW() const noexcept {
+    uint8_t PSW = 2;
+    PSW |= carry;
+    PSW |= (parity << 2);
+    PSW |= (auxCarry << 4);
+    PSW |= (zero << 6);
+    PSW |= (sign << 7);
+    return PSW;
+}
+void ConditionFlags::fromPSW(const uint8_t& PSW) noexcept {
+    carry = 1 & PSW;
+    parity =  (PSW & (1 << 2)) >> 2;
+    auxCarry = (PSW & (1 << 4)) >> 4;
+    zero = (PSW & (1 << 6)) >> 6;
+    sign = (PSW & (1 << 7)) >> 7;
+}
+
 void ConditionFlags::clear() {
     carry = 0;
     parity = 0;

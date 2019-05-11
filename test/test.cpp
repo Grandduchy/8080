@@ -1,3 +1,5 @@
+
+#ifdef TEST_ENABLE
 #define BOOST_TEST_MODULE opcode_test
 #include <boost/test/included/unit_test.hpp>
 #include "State8080.hpp"
@@ -310,4 +312,4 @@ BOOST_AUTO_TEST_CASE( other_tests) {
 
 }
 
-
+#endif
