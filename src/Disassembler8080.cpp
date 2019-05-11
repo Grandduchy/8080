@@ -188,13 +188,17 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
 
 
 void Disassembler8080::todo(State8080& state) {
-    std::cout << "Instruction marked as to do \n";
+    std::cout << std::hex;
+    std::cout << "Instruction " << state.memory[state.programCounter] << " marked as todo \n";
     UNUSED(state);
+    std::cout << std::dec;
 }
 
 void Disassembler8080::unimplemented(State8080& state) {
-    std::cout << "Unimplemented Instruction \n";
+    std::cout << std::hex;
+    std::cout << "Instruction " << state.memory[state.programCounter] << " marked as unimplemented \n";
     UNUSED(state);
+    std::cout << std::dec;
 }
 
 
