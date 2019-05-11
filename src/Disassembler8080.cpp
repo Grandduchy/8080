@@ -42,6 +42,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
     opcodeTable[0x23] = &Disassembler8080::OP_INXH;
     opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
+    opcodeTable[0x27] = &Disassembler8080::todo;
     opcodeTable[0x29] = &Disassembler8080::OP_DADH;
     opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
