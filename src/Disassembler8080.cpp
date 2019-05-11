@@ -279,7 +279,7 @@ void Disassembler8080::OP_LXISP_D16(State8080& state) {
     // the function won't work for this.
     uint8_t byte1 = state.memory[state.programCounter + 1];
     uint8_t byte2 = state.memory[state.programCounter + 2];
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte1) << 8) | byte2);
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte2) << 8) | byte1);
     state.stackPointer = address;
     state.programCounter += 2;
 }
