@@ -1,3 +1,4 @@
+#define TEST_ENABLE
 
 #ifdef TEST_ENABLE
 #define BOOST_TEST_MODULE opcode_test
@@ -192,8 +193,24 @@ BOOST_AUTO_TEST_CASE( stack_tests ) {
                 && state.memory[0x3A2B] == 0x8F;
         if (!passed)
             BOOST_ERROR("0xC5 OP PUSH B failure");
-
-
+    }
+    { // Push and pop PSW, 0xF5 and 0xF1
+        state.clearAll();
+        state.a = 0x1F;
+        state.stackPointer = 0x502A;
+        state.condFlags.carry = state.condFlags.zero = state.condFlags.parity = 1;
+        ConditionFlags flagCopy = state.condFlags;
+        memory[0] = 0xF5;
+        dis.runCycle(state);
+        bool passed = memory[0x5029] == 0x1F && 0x47 == memory[0x5028] && state.stackPointer == 0x5028;
+        if (!passed)
+            BOOST_FAIL("PUSH PSW failure, cannot continue POP test.");
+        // pop now
+        memory[1] = 0xF1;
+        dis.runCycle(state);
+        passed = state.condFlags.makeBitSet() == flagCopy.makeBitSet() && state.stackPointer == 0x502A;
+        if (!passed)
+            BOOST_ERROR("POP PSW failure");
     }
 }
 
@@ -309,7 +326,30 @@ BOOST_AUTO_TEST_CASE( other_tests) {
         if (state.l != state.a)
             BOOST_ERROR("0x6F OP MOV L,A failure");
     }
+    { // 0xEB XCHG
+       state.clearAll();
+       memory[0] = 0xEB;
+       state.h = 0;
+       state.l = 0xFF;
+       state.d = 0x33;
+       state.e = 0x55;
+       dis.runCycle(state);
+       bool passed = state.d == 0 && state.e == 0xFF && state.h == 0x33 && state.l == 0x55;
+       if (!passed)
+            BOOST_ERROR("0xEB XCHG failure");
+    }
+    {// OP CPI D8 0xfe
+        state.clearAll();
+        state.condFlags.zero = state.condFlags.carry = state.condFlags.sign = state.condFlags.parity = 1;
+        memory[0] = 0xFE;
+        state.a = 0x4A;
+        memory[1] = 0x40;
+        dis.runCycle(state);
+        bool passed = state.a == 0x4A && state.condFlags.zero == 0 && state.condFlags.carry == 0;
+        if (!passed)
+            BOOST_ERROR("0xFE CPI D8 failure");
 
+    }
 }
 
 #endif

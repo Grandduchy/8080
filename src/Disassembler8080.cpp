@@ -73,10 +73,17 @@ Disassembler8080::Disassembler8080() {
 
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
     opcodeTable[0xD3] = &Disassembler8080::todo;
+    opcodeTable[0xDB] = &Disassembler8080::todo;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
     opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
+    opcodeTable[0xEB] = &Disassembler8080::OP_XCHG;
+    opcodeTable[0xF1] = &Disassembler8080::OP_POPPSW;
+    opcodeTable[0xF3] = &Disassembler8080::OP_DI;
+    opcodeTable[0xF5] = &Disassembler8080::OP_PUSHPSW;
+    opcodeTable[0xFB] = &Disassembler8080::OP_EI;
+    opcodeTable[0xFE] = &Disassembler8080::OP_CPI_D8;
 }
 
 
@@ -443,5 +450,44 @@ void Disassembler8080::OP_ANID8(State8080& state) {
     SETPARITY(state.a);
     SETZERO(state.a);
     SETSIGN(state.a);
+    ++state.programCounter;
+}
+
+// swap pairs h&l with d&e
+void Disassembler8080::OP_XCHG(State8080& state) {
+    std::swap(state.h, state.d);
+    std::swap(state.l, state.e);
+}
+
+// pop/push data onto stack w/ PSW and accumulator
+void Disassembler8080::OP_POPPSW(State8080& state) {
+    uint8_t PSW = 0;
+    POP(state, state.a, PSW);
+    state.condFlags.fromPSW(PSW);
+}
+
+// pop/push data onto stack w/ PSW and accumulator
+void Disassembler8080::OP_PUSHPSW(State8080& state) {
+    uint8_t PSW = state.condFlags.makePSW();
+    PUSH(state, state.a, PSW);
+}
+
+void Disassembler8080::OP_EI(State8080& state) {
+    state.allowInterrupt = true;
+}
+
+void Disassembler8080::OP_DI(State8080 & state) {
+    state.allowInterrupt = false;
+}
+
+// compare next byte with accumulator by subtracting, note thtat nothing is set.
+void Disassembler8080::OP_CPI_D8(State8080& state) {
+    uint8_t byte = state.memory[state.programCounter + 1];
+    uint16_t sum = state.a - byte;
+    state.condFlags.zero = byte == state.a;
+    SETPARITY(sum);
+    SETSIGN(sum);
+    state.condFlags.carry = sum > byte;
+    // note aux carry would be set.
     ++state.programCounter;
 }

@@ -7,7 +7,7 @@
 #include "State8080.hpp"
 #include "Disassembler8080.hpp"
 #include "ConditionFlags.hpp"
-
+/*
 int main() {
     ConditionFlags flags;
     std::bitset<8> bits;
@@ -23,3 +23,4 @@ int main() {
     return 0;
 }
 
+*/

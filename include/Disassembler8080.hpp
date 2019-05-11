@@ -71,6 +71,7 @@ private:
     void OP_ANID8(State8080&); // 0xe6
     void OP_XCHG(State8080&); // 0xeb
     void OP_POPPSW(State8080&); // 0xf1
+    void OP_DI(State8080&); // 0xF3 , this function may not be needed, but added regardless.
     void OP_PUSHPSW(State8080&); // 0xf5
     void OP_EI(State8080&); // 0xfb
     void OP_CPI_D8(State8080&); // 0xfe
