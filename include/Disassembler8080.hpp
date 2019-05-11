@@ -38,6 +38,7 @@ private:
     void OP_LXIH_D16(State8080&); // 0x21
     void OP_INXH(State8080&); // 0x23
     void OP_MVIH_D8(State8080&); // 0x26
+    void OP_DAA(State8080&); // 0x27
     void OP_DADH(State8080&); // 0x29
     void OP_LXISP_D16(State8080&); // 0x31
     void OP_STA_ADR(State8080&); // 0x32

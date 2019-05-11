@@ -92,12 +92,6 @@ void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
-    if (opcodeFunc == &Disassembler8080::unimplemented){
-#ifdef DEBUG
-        std::cout << opcode;
-#endif
-        std::cout << std::endl;
-    }
 
     state.programCounter++;
 }
@@ -190,14 +184,14 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
 
 void Disassembler8080::todo(State8080& state) {
     std::cout << std::hex;
-    std::cout << "Instruction " << state.memory[state.programCounter] << " marked as todo \n";
+    std::cout << "Instruction " << static_cast<int>(state.memory[state.programCounter]) << " marked as todo \n";
     UNUSED(state);
     std::cout << std::dec;
 }
 
 void Disassembler8080::unimplemented(State8080& state) {
     std::cout << std::hex;
-    std::cout << "Instruction " << state.memory[state.programCounter] << " marked as unimplemented \n";
+    std::cout << "Instruction " << static_cast<int>(state.memory[state.programCounter]) << " marked as unimplemented \n";
     UNUSED(state);
     std::cout << std::dec;
 }
