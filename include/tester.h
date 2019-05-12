@@ -5,6 +5,6 @@
 // unmark both to run the main program
 
 //#define OP_TEST
-//#define sideTest
+#define sideTest
 
 #endif // TESTER_H
