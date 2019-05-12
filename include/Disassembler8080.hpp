@@ -13,6 +13,9 @@ public:
     void runCycle(State8080&);
     std::array<opcodePtr, 256> opcodeTable;
 
+    bool wasUnimplemented = false;
+    bool wasTodo = false;
+
 private:
 
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done

@@ -1,6 +1,6 @@
-//#define TEST_ENABLE
+#include "tester.h"
 
-#ifdef TEST_ENABLE
+#ifdef OP_TEST
 #define BOOST_TEST_MODULE opcode_test
 #include <boost/test/included/unit_test.hpp>
 #include "State8080.hpp"

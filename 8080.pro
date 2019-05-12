@@ -8,12 +8,14 @@ SOURCES += \
         src/Disassembler8080.cpp \
         src/State8080.cpp \
         src/main.cpp \
+        test/sidetester.cpp \
         test/test.cpp
 
 HEADERS += \
     include/ConditionFlags.hpp \
     include/Disassembler8080.hpp \
-    include/State8080.hpp
+    include/State8080.hpp \
+    include/tester.h
 
 INCLUDEPATH += \
     include/

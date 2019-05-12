@@ -15,9 +15,9 @@
 // count all bits, if sum is even set flag to 1 if odd set to 0
 // use gnu's optimised function if possible
 #ifdef __GNUC__
-    #define SETPARITY(expr) (state.condFlags.parity = !((__builtin_popcount((expr) & 0xFF) & 0x1) == 1))
+    #define SETPARITY(expr) (state.condFlags.parity = (__builtin_popcount((expr) & 0xFF) & 0x1) == 1)
 #else
-    #define SETPARITY(expr) (state.condFlags.parity = !((( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) == 1 ))
+    #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) == 1 )
 #endif
 
 #define UNUSED(param) (void)(param)
@@ -92,7 +92,10 @@ void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
-
+    if (opcodeFunc == &Disassembler8080::unimplemented)
+        wasUnimplemented = true;
+    if (opcodeFunc == &Disassembler8080::todo)
+        wasTodo = true;
     state.programCounter++;
 }
 
