@@ -1,4 +1,4 @@
-
+//#define TEST_ENABLE
 
 #ifdef TEST_ENABLE
 #define BOOST_TEST_MODULE opcode_test
