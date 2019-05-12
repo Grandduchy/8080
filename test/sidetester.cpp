@@ -32,7 +32,7 @@ RT check(const std::string& error_message) {
     return RT();// return empty object if function fails
 }
 
-std::string flags(ConditionFlags flags) {
+std::string flags(const ConditionFlags& flags) {
     std::string flag;
     if (flags.zero) flag.push_back('z');
     else flag.push_back('.');
@@ -44,21 +44,32 @@ std::string flags(ConditionFlags flags) {
     else flag.push_back('.');
 
     if (flags.carry) flag.push_back('c');
-    else flag.push_back('c');
+    else flag.push_back('.');
 
     return flag;
 }
 
 int main() {
     State8080 state;
-    state = stateFromFile("../8080/rsc/invaders", 0);
+    std::cout << "Enter the amount of cycles to run, -1 is to restart, -2 is to exit" << std::endl;
+    try {
+        state = stateFromFile("../8080/rsc/invaders");
+    } catch (...) {
+        std::cerr << "Failed write into memory, problems may ensure. \n";
+    }
+
     Disassembler8080 dis;
     std::cout << std::hex;
     int sum = 0;
     while(true) {
         int i = check<int>("");
-        if (i == -1) break;
-
+        if (i == -2) break;
+        if (i == -1) {
+            std::cout << "Restarting... \n";
+            sum = 0;
+            state = stateFromFile("../8080/rsc/invaders");
+            continue;
+        }
         for (int times = 0; times != i; times++) {
             dis.runCycle(state);
             ++sum;
