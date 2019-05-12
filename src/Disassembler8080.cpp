@@ -73,8 +73,8 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
 
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
-    opcodeTable[0xD3] = &Disassembler8080::todo;
-    opcodeTable[0xDB] = &Disassembler8080::todo;
+    opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
+    opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
@@ -96,6 +96,8 @@ void Disassembler8080::runCycle(State8080& state) {
         wasUnimplemented = true;
     if (opcodeFunc == &Disassembler8080::todo)
         wasTodo = true;
+    if (opcodeFunc == &Disassembler8080::OP_IND8 || opcodeFunc == &Disassembler8080::OP_OUTD8)
+        state.programCounter++;
     state.programCounter++;
 }
 
@@ -493,3 +495,8 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
     // note aux carry would be set.
     ++state.programCounter;
 }
+
+
+void Disassembler8080::OP_IND8(State8080 &){}
+void Disassembler8080::OP_OUTD8(State8080 &){}
+

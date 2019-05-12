@@ -32,18 +32,21 @@ RT check(const std::string& error_message) {
     return RT();// return empty object if function fails
 }
 
-std::string flags(const ConditionFlags& flags) {
+std::string flags(const State8080& state) {
     std::string flag;
-    if (flags.zero) flag.push_back('z');
+    if (state.condFlags.zero) flag.push_back('z');
     else flag.push_back('.');
 
-    if (flags.sign) flag.push_back('s');
+    if (state.condFlags.sign) flag.push_back('s');
     else flag.push_back('.');
 
-    if (flags.parity) flag.push_back('p');
+    if (state.condFlags.parity) flag.push_back('p');
     else flag.push_back('.');
 
-    if (flags.carry) flag.push_back('c');
+    if (state.allowInterrupt) flag.push_back('i');
+    else flag.push_back('.');
+
+    if (state.condFlags.carry) flag.push_back('c');
     else flag.push_back('.');
 
     return flag;
@@ -70,15 +73,27 @@ int main() {
             state = stateFromFile("../8080/rsc/invaders");
             continue;
         }
+        // 37411
+        // 37413
         for (int times = 0; times != i; times++) {
             dis.runCycle(state);
             ++sum;
+            if (dis.wasUnimplemented) {
+                std::cout << "Unimplemented, possible Error at: " << sum << std::endl;
+                dis.wasUnimplemented = false;
+            }
+            if (dis.wasTodo) {
+                std::cout << "Noted as todo at:" << sum << std::endl;
+                dis.wasTodo = false;
+            }
         }
-        std::cout << "a\tb\tc\td\te\th\tl\tpc\tsp\tflags\ttot\n";
+
+
+        std::cout << "a\tb\tc\td\te\th\tl\tpc\tsp\tflags\ttot\n" << std::hex;
         // C style cast is bad but ok here.
         std::cout << (int)state.a << "\t" << (int)state.b << "\t" << (int)state.c << "\t" << (int)state.d
                 << "\t" << (int) state.e << "\t" << (int)state.h << "\t" << (int)state.l << "\t"
-                << (int)state.programCounter << "\t" <<(int)state.stackPointer << "\t" << flags(state.condFlags)
+                << (int)state.programCounter << "\t" <<(int)state.stackPointer << "\t" << flags(state)
                 << "\t" << std::dec << sum << std::hex << "\n";
     }
     return 0;
