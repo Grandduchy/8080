@@ -32,6 +32,6 @@ struct State8080 {
     void clearAll();
 };
 
-extern State8080 stateFromFile(const std::string&);
+extern State8080 stateFromFile(const std::string&, const uint16_t& offset);
 
 #endif // STATE_H

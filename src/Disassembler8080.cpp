@@ -500,3 +500,17 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
 void Disassembler8080::OP_IND8(State8080 &){}
 void Disassembler8080::OP_OUTD8(State8080 &){}
 
+
+
+void Disassembler8080::generateInterrupt(State8080& state) {
+    // push PC onto the stack
+    uint16_t returnAddress = state.stackPointer + 2;
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    // while there are 8 different numbers other than 2 for RST,
+    // space invaders only uses number 2.
+    state.programCounter = 8 * 2;
+
+
+}

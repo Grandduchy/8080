@@ -16,6 +16,8 @@ public:
     bool wasUnimplemented = false;
     bool wasTodo = false;
 
+    void generateInterrupt(State8080& state);
+
 private:
 
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done

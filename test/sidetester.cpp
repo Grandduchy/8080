@@ -5,6 +5,7 @@
 #include <string>
 #include <iomanip>
 #include <functional>
+#include <chrono>
 
 #include "State8080.hpp"
 #include "Disassembler8080.hpp"
@@ -32,6 +33,8 @@ RT check(const std::string& error_message) {
     return RT();// return empty object if function fails
 }
 
+
+
 std::string flags(const State8080& state) {
     std::string flag;
     if (state.condFlags.zero) flag.push_back('z');
@@ -52,11 +55,21 @@ std::string flags(const State8080& state) {
     return flag;
 }
 
+// Other emulator's interrupt occurs at 42433
+
 int main() {
+
+    auto getTime = [](){
+        return std::chrono::duration_cast<std::chrono::milliseconds>(
+                  std::chrono::system_clock::now().time_since_epoch()
+               );
+    };
+
+
     State8080 state;
     std::cout << "Enter the amount of cycles to run, -1 is to restart, -2 is to exit" << std::endl;
     try {
-        state = stateFromFile("../8080/rsc/invaders");
+        state = stateFromFile("../8080/rsc/invaders",0);
     } catch (...) {
         std::cerr << "Failed write into memory, problems may ensure. \n";
     }
@@ -70,13 +83,21 @@ int main() {
         if (i == -1) {
             std::cout << "Restarting... \n";
             sum = 0;
-            state = stateFromFile("../8080/rsc/invaders");
+            state = stateFromFile("../8080/rsc/invaders",0);
             continue;
         }
         // 37411
         // 37413
+        auto lastInterrupt = getTime();
         for (int times = 0; times != i; times++) {
             dis.runCycle(state);
+            auto now = getTime();
+            if ((now - lastInterrupt).count() > 16.7) {
+                if (state.allowInterrupt) {
+                    dis.generateInterrupt(state);
+                    lastInterrupt = getTime();
+                }
+            }
             ++sum;
             if (dis.wasUnimplemented) {
                 std::cout << "Unimplemented, possible Error at: " << sum << std::endl;
