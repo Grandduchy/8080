@@ -72,12 +72,14 @@ Disassembler8080::Disassembler8080() {
 
     opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
+    opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
     opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
 
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
     opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
     opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
+    opcodeTable[0xDA] = &Disassembler8080::OP_JC;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
     opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
@@ -434,6 +436,13 @@ void Disassembler8080::OP_RET(State8080& state) {
     // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
 }
 
+void Disassembler8080::OP_JZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_JMPADR(state);
+    else
+        state.programCounter += 2;
+}
+
 // call a subroutine
 void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
     uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
@@ -445,6 +454,13 @@ void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
     state.programCounter = newAddress;
     --state.programCounter; // inverse the increment of the program counter
  }
+
+void Disassembler8080::OP_JC(State8080& state) {
+    if (state.condFlags.carry == 1)
+        OP_JMPADR(state);
+    else
+        state.programCounter += 2;
+}
 
 void Disassembler8080::OP_POPD(State8080& state) {
     POP(state, state.d, state.e);

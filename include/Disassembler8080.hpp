@@ -69,10 +69,12 @@ private:
     void OP_ADID8(State8080&); // 0xc6
     void OP_RZ(State8080&); // 0xC8
     void OP_RET(State8080&); // 0xc9
+    void OP_JZ(State8080&); // 0xCA
     void OP_CALLADR(State8080&); // 0xcd
     void OP_POPD(State8080&); // 0xd1
     void OP_OUTD8(State8080&); // 0xd3
     void OP_PUSHD(State8080&); //0xd5
+    void OP_JC(State8080&); //0xDA
     void OP_IND8(State8080&); // 0xDB , this function may not be needed
     void OP_POPH(State8080&); // 0xe1
     void OP_PUSHH(State8080&); // 0xe5
