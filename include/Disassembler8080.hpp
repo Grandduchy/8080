@@ -47,6 +47,7 @@ private:
     void OP_DADH(State8080&); // 0x29
     void OP_LXISP_D16(State8080&); // 0x31
     void OP_STA_ADR(State8080&); // 0x32
+    void OP_DCRM(State8080&); // 0x35
     void OP_MVIM_D8(State8080&); // 0x36
     void OP_LDA_ADR(State8080&); // 0x3a
     void OP_MVIA_D8(State8080&); // 0x3e

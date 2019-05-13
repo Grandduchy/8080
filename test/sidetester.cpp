@@ -29,7 +29,6 @@ RT check(const std::string& error_message) {
         }
 
     }//while
-    throw std::runtime_error("Did not recieve input from user");
     return RT();// return empty object if function fails
 }
 
@@ -55,15 +54,9 @@ std::string flags(const State8080& state) {
     return flag;
 }
 
-// Other emulator's interrupt occurs at 42433
+
 
 int main() {
-
-    auto getTime = [](){
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-                  std::chrono::system_clock::now().time_since_epoch()
-               );
-    };
 
 
     State8080 state;
@@ -88,14 +81,29 @@ int main() {
         }
         // 37411
         // 37413
-        auto lastInterrupt = getTime();
+        auto lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                 );
         for (int times = 0; times != i; times++) {
+            if (sum == 42434) { // because we do not take into account any cycle accuracy, the point it jump varies by thousands.
+                dis.generateInterrupt(state);
+                lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch()
+                         );
+                ++sum;
+                continue;
+            }
             dis.runCycle(state);
-            auto now = getTime();
+
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                     );
             if ((now - lastInterrupt).count() > 16.7) {
                 if (state.allowInterrupt) {
                     dis.generateInterrupt(state);
-                    lastInterrupt = getTime();
+                    lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::system_clock::now().time_since_epoch()
+                             );
                 }
             }
             ++sum;

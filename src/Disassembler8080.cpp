@@ -46,6 +46,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x29] = &Disassembler8080::OP_DADH;
     opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
+    opcodeTable[0x35] = &Disassembler8080::OP_DCRM;
     opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
     opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
@@ -297,6 +298,13 @@ void Disassembler8080::OP_STA_ADR(State8080& state) {
     state.memory[address] = state.a;
     state.programCounter += 2;
 }
+
+void Disassembler8080::OP_DCRM(State8080& state) {
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[HL];
+    DCR(state, byte);
+}
+
 
 void Disassembler8080::OP_MVIM_D8(State8080& state) {
     // function won't work for this, store the byte into some location denoted by H & l pair
