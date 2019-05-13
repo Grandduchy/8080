@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <functional>
 #include <chrono>
+#include <vector>
 
 #include "State8080.hpp"
 #include "Disassembler8080.hpp"
@@ -54,10 +55,17 @@ std::string flags(const State8080& state) {
     return flag;
 }
 
+std::vector<int> copyStack(const State8080& state, const uint8_t& i) {
+    // starts at around 9200 at this point
+    std::vector<int> stack;
+    for (int p = 0; p != i; p++) {
+        stack.push_back(state.memory[9200 + p]);
+    }
+    return stack;
+}
 
 
 int main() {
-
 
     State8080 state;
     std::cout << "Enter the amount of cycles to run, -1 is to restart, -2 is to exit" << std::endl;
@@ -116,7 +124,7 @@ int main() {
                 dis.wasTodo = false;
             }
         }
-
+        auto s = copyStack(state, 40);
 
         std::cout << "a\tb\tc\td\te\th\tl\tpc\tsp\tflags\ttot\n" << std::hex;
         // C style cast is bad but ok here.
