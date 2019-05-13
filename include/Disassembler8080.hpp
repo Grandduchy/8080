@@ -67,6 +67,7 @@ private:
     void OP_JMPADR(State8080&); // 0xc3
     void OP_PUSHB(State8080&); // 0xc5
     void OP_ADID8(State8080&); // 0xc6
+    void OP_RZ(State8080&); // 0xC8
     void OP_RET(State8080&); // 0xc9
     void OP_CALLADR(State8080&); // 0xcd
     void OP_POPD(State8080&); // 0xd1

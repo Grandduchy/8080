@@ -70,6 +70,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
     opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
 
+    opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
     opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
 
@@ -417,6 +418,12 @@ void Disassembler8080::OP_ADID8(State8080& state) {
     // aux carry would have been set here.
     state.a = 0xFF & sum;
     ++state.programCounter;
+}
+
+// return from a subroutine if zero is set
+void Disassembler8080::OP_RZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_RET(state);
 }
 
 // return from a subroutine
