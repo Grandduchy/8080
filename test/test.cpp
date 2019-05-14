@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         memory[1]= 0x25;
         memory[2] = 0xAF;
         dis.runCycle(state);
-        bool passed = state.stackPointer == 0x25AF;
+        bool passed = state.stackPointer == 0xAF25;
         if (!passed)
             BOOST_ERROR("0x31 LXI SP failure");
     }
