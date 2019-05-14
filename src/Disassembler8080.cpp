@@ -31,9 +31,6 @@ Disassembler8080::Disassembler8080() {
         opcodePtr = &Disassembler8080::unimplemented;
     }
 
-
-    // Data Statements
-
     // Carry Bit Instructions
 
     // Immediate Instructions
@@ -229,6 +226,15 @@ void Disassembler8080::unimplemented(State8080& state) {
 }
 
 
+// set carry to 1
+void Disassembler8080::OP_STC(State8080& state) {
+    state.condFlags.carry = 1;
+}
+
+// complement the carry flag, like a toggle.
+void Disassembler8080::OP_CMC(State8080& state) {
+    state.condFlags.carry = !state.condFlags.carry;
+}
 
 
 

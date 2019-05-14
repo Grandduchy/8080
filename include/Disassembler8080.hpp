@@ -28,10 +28,10 @@ private:
     // Opcodes are arranged in the opcode's function order
 
 
-
-    // Data Statements
-
     // Carry Bit Instructions
+    void OP_STC(State8080&); // 0x37
+    void OP_CMC(State8080&); // 0x3F
+
 
     // Immediate Instructions
     void OP_LXIB_D16(State8080&); // 0x01
