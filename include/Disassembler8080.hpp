@@ -68,10 +68,27 @@ private:
     void OP_OUTD8(State8080&); // 0xd3
     void OP_IND8(State8080&); // 0xDB
     // Single Register Instructions
+    void OP_CMA(State8080&); // 0x2F
+    void OP_DAA(State8080&); // 0x27
+        // INR
+    void OP_INRB(State8080&); // 0x04
+    void OP_INRC(State8080&); // 0x0C
+    void OP_INRD(State8080&); // 0x14
+    void OP_INRE(State8080&); // 0x1C
+    void OP_INRH(State8080&); // 0x24
+    void OP_INRL(State8080&); // 0x2C
+    void OP_INRM(State8080&); // 0x34
+    void OP_INRA(State8080&); // 0x3C
+        // DCR
     void OP_DCRB(State8080&); // 0x05
     void OP_DCRC(State8080&); // 0x0d
-    void OP_DAA(State8080&); // 0x27
+    void OP_DCRD(State8080&); // 0x15
+    void OP_DCRE(State8080&); // 0x1D
+    void OP_DCRH(State8080&); // 0x25
+    void OP_DCRL(State8080&); // 0x2D
     void OP_DCRM(State8080&); // 0x35
+    void OP_DCRA(State8080&); // 0x3D
+
     // NOP instruction
     void OP_NOP(State8080&); // 0x00
 
@@ -114,6 +131,7 @@ private:
     // functions that perform an opcode's operation using the registers themselves.
     inline void LXI_D16(State8080&, uint8_t&, uint8_t&);
     inline void DCR(State8080&, uint8_t&);
+    inline void INR(State8080&, uint8_t&);
     inline void DAD(State8080&, uint8_t&, uint8_t&);
     inline void MVI_D8(State8080&, uint8_t&);
     inline void INX(uint8_t&, uint8_t&);

@@ -32,6 +32,9 @@ Disassembler8080::Disassembler8080() {
     }
 
     // Carry Bit Instructions
+    opcodeTable[0x37] = &Disassembler8080::OP_STC;
+    opcodeTable[0x3F] = &Disassembler8080::OP_CMC;
+
 
     // Immediate Instructions
     opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
@@ -69,10 +72,27 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
     opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
     // Single Register Instructions
+    opcodeTable[0x2F] = &Disassembler8080::OP_CMA;
+    opcodeTable[0x27] = &Disassembler8080::OP_DAA;
+        // DCR
     opcodeTable[0x05] = &Disassembler8080::OP_DCRB;
     opcodeTable[0x0d] = &Disassembler8080::OP_DCRC;
-    opcodeTable[0x27] = &Disassembler8080::todo; /// <- todo
+    opcodeTable[0x15] = &Disassembler8080::OP_DCRD;
+    opcodeTable[0x1D] = &Disassembler8080::OP_DCRE;
+    opcodeTable[0x25] = &Disassembler8080::OP_DCRH;
+    opcodeTable[0x2D] = &Disassembler8080::OP_DCRL;
     opcodeTable[0x35] = &Disassembler8080::OP_DCRM;
+    opcodeTable[0x3D] = &Disassembler8080::OP_DCRA;
+        // INR
+    opcodeTable[0x04] = &Disassembler8080::OP_INRB;
+    opcodeTable[0x0C] = &Disassembler8080::OP_INRC;
+    opcodeTable[0x14] = &Disassembler8080::OP_INRD;
+    opcodeTable[0x1C] = &Disassembler8080::OP_INRE;
+    opcodeTable[0x24] = &Disassembler8080::OP_INRH;
+    opcodeTable[0x2C] = &Disassembler8080::OP_INRL;
+    opcodeTable[0x34] = &Disassembler8080::OP_INRM;
+    opcodeTable[0x3C] = &Disassembler8080::OP_INRA;
+
     // NOP instruction
     opcodeTable[0x0] = &Disassembler8080::OP_NOP;
 
@@ -144,6 +164,16 @@ inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
     SETPARITY(reg);
     SETAUX_8(reg);
 }
+
+// Increment a register
+inline void Disassembler8080::INR(State8080& state, uint8_t& reg) {
+    ++reg;
+    SETZERO(reg);
+    SETSIGN(reg);
+    SETPARITY(reg);
+    SETAUX_8(reg);
+}
+
 
 // Register pair reg1 & reg2 is added to H & L register pair
 inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
@@ -225,6 +255,7 @@ void Disassembler8080::unimplemented(State8080& state) {
     std::cout << std::dec;
 }
 
+// CARRY BIT INSTRUCTIONS
 
 // set carry to 1
 void Disassembler8080::OP_STC(State8080& state) {
@@ -250,10 +281,7 @@ void Disassembler8080::OP_LXIB_D16(State8080& state) {
 
 
 
-void Disassembler8080::OP_DCRB(State8080& state) {
-    DCR(state, state.b);
 
-}
 
 // Set register B to the next byte
 void Disassembler8080::OP_MVIB_D8(State8080& state) {
@@ -264,9 +292,89 @@ void Disassembler8080::OP_DADB(State8080& state) {
     DAD(state, state.b, state.c);
 }
 
+
+// SINGLE REGISTER INSTRUCTIONS
+
+// Every bit of the accumulator is inverted
+void Disassembler8080::OP_CMA(State8080& state) {
+    state.a = ~state.a;
+}
+
+void Disassembler8080::OP_DAA(State8080& state) {
+    // if the 4 least sig bits are > 9
+    if ((state.a & 0xF) > 9 || state.condFlags.auxCarry == 1) {
+        state.condFlags.auxCarry = (((state.a & 0xF) + 6) & 0xF0) != 0; // set if carry out of least 4
+        state.a += 6;
+    }
+    // if the 4 great sig bits are > 9
+    if ((state.a & 0xF0) > 0x90 || state.condFlags.carry == 1) {
+        uint16_t sum = static_cast<uint16_t>(state.a) + 0x60;
+        state.a = sum & 0xFF;
+        SETPARITY(state.a);
+        SETZERO(state.a);
+        SETSIGN(state.a);
+        SETCARRY(sum, 0xFF);
+
+    }
+}
+
+void Disassembler8080::OP_INRB(State8080& state) { // 0x04
+    INR(state, state.b);
+}
+void Disassembler8080::OP_INRC(State8080& state) {// 0x0C
+    INR(state, state.c);
+}
+void Disassembler8080::OP_INRD(State8080& state) { // 0x14
+    INR(state, state.d);
+}
+void Disassembler8080::OP_INRE(State8080& state) { // 0x1C
+    INR(state, state.e);
+}
+void Disassembler8080::OP_INRH(State8080& state) { // 0x24
+    INR(state, state.h);
+}
+void Disassembler8080::OP_INRL(State8080& state) { // 0x2C
+    INR(state, state.l);
+}
+void Disassembler8080::OP_INRM(State8080& state) { // 0x34
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[address];
+    INR(state, byte);
+}
+void Disassembler8080::OP_INRA(State8080& state) { // 0x3C
+    INR(state, state.a);
+}
+
+
+
+void Disassembler8080::OP_DCRB(State8080& state) {
+    DCR(state, state.b);
+}
 void Disassembler8080::OP_DCRC(State8080& state) {
     DCR(state, state.c);
 }
+void Disassembler8080::OP_DCRD(State8080& state) {
+    DCR(state, state.d);
+}
+void Disassembler8080::OP_DCRE(State8080& state) {
+    DCR(state, state.e);
+}
+void Disassembler8080::OP_DCRH(State8080& state) {
+    DCR(state, state.h);
+}
+void Disassembler8080::OP_DCRL(State8080& state) {
+    DCR(state, state.l);
+}
+
+void Disassembler8080::OP_DCRM(State8080& state) {
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[HL];
+    DCR(state, byte);
+}
+void Disassembler8080::OP_DCRA(State8080& state) {
+    DCR(state, state.a);
+}
+
 
 void Disassembler8080::OP_MVIC_D8(State8080& state) {
     MVI_D8(state, state.c);
@@ -331,11 +439,7 @@ void Disassembler8080::OP_STA_ADR(State8080& state) {
     state.programCounter += 2;
 }
 
-void Disassembler8080::OP_DCRM(State8080& state) {
-    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
-    uint8_t& byte = state.memory[HL];
-    DCR(state, byte);
-}
+
 
 
 void Disassembler8080::OP_MVIM_D8(State8080& state) {
