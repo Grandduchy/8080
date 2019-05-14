@@ -5,7 +5,7 @@
 #include "State8080.hpp"
 
 State8080::State8080() {
-    std::fill(memory.begin(), memory.end(), 0);
+    clearAll();
 }
 
 void State8080::clearMemory() {
@@ -38,7 +38,8 @@ void State8080::clearAll() {
 }
 
 
-State8080 stateFromFile(const std::string& fname, const uint16_t& memoryStart = 0){
+
+State8080 stateFromFile(const std::string& fname, const uint16_t& offset = 0){
 
     State8080 state;
 
@@ -51,17 +52,17 @@ State8080 stateFromFile(const std::string& fname, const uint16_t& memoryStart = 
     // Make sure there is enough room for the file
     auto size = ifs.tellg();
     ifs.seekg(std::ios_base::beg);
-    if (State8080::RAM - memoryStart < size)
+    if (State8080::RAM - offset < size)
         throw std::runtime_error("start of selection of memory is too large or the file itself is too large");
 
     // load memory to position memoryStart
     uint8_t byte;
-    for (size_t i = memoryStart; ifs.read(reinterpret_cast<char*>(&byte), sizeof(uint8_t)) ;i++) {
+    for (size_t i = offset; ifs.read(reinterpret_cast<char*>(&byte), sizeof(uint8_t)) ;i++) {
         state.memory[i] = byte;
     }
 
     // make sure atleast some data was read, doesn't check the integrity of the file itself.
-    if (std::accumulate(state.memory.cbegin() + memoryStart, state.memory.cend(), 0) != 0){
+    if (std::accumulate(state.memory.cbegin() + offset, state.memory.cend(), 0) != 0){
         std::cout << "Successful write into memory" << std::endl;
     }
     else {

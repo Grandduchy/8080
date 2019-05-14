@@ -15,9 +15,9 @@
 // count all bits, if sum is even set flag to 1 if odd set to 0
 // use gnu's optimised function if possible
 #ifdef __GNUC__
-    #define SETPARITY(expr) (state.condFlags.parity = (__builtin_popcount((expr) & 0xFF) & 0x1) == 1)
+    #define SETPARITY(expr) (state.condFlags.parity = (__builtin_popcount((expr) & 0xFF) & 0x1) != 1)
 #else
-    #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) == 1 )
+    #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) != 1 )
 #endif
 
 #define UNUSED(param) (void)(param)
@@ -46,6 +46,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x29] = &Disassembler8080::OP_DADH;
     opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
+    opcodeTable[0x35] = &Disassembler8080::OP_DCRM;
     opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
     opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
@@ -69,13 +70,16 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
     opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
 
+    opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
+    opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
     opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
 
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
-    opcodeTable[0xD3] = &Disassembler8080::todo;
-    opcodeTable[0xDB] = &Disassembler8080::todo;
+    opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
+    opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
+    opcodeTable[0xDA] = &Disassembler8080::OP_JC;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
     opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
@@ -96,6 +100,8 @@ void Disassembler8080::runCycle(State8080& state) {
         wasUnimplemented = true;
     if (opcodeFunc == &Disassembler8080::todo)
         wasTodo = true;
+    if (opcodeFunc == &Disassembler8080::OP_IND8 || opcodeFunc == &Disassembler8080::OP_OUTD8)
+        state.programCounter++;
     state.programCounter++;
 }
 
@@ -296,6 +302,13 @@ void Disassembler8080::OP_STA_ADR(State8080& state) {
     state.programCounter += 2;
 }
 
+void Disassembler8080::OP_DCRM(State8080& state) {
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[HL];
+    DCR(state, byte);
+}
+
+
 void Disassembler8080::OP_MVIM_D8(State8080& state) {
     // function won't work for this, store the byte into some location denoted by H & l pair
     uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
@@ -409,12 +422,25 @@ void Disassembler8080::OP_ADID8(State8080& state) {
     ++state.programCounter;
 }
 
+// return from a subroutine if zero is set
+void Disassembler8080::OP_RZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_RET(state);
+}
+
 // return from a subroutine
 void Disassembler8080::OP_RET(State8080& state) {
     // pop the old address from the stack
     state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
     state.stackPointer += 2;
     // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
+}
+
+void Disassembler8080::OP_JZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_JMPADR(state);
+    else
+        state.programCounter += 2;
 }
 
 // call a subroutine
@@ -428,6 +454,13 @@ void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
     state.programCounter = newAddress;
     --state.programCounter; // inverse the increment of the program counter
  }
+
+void Disassembler8080::OP_JC(State8080& state) {
+    if (state.condFlags.carry == 1)
+        OP_JMPADR(state);
+    else
+        state.programCounter += 2;
+}
 
 void Disassembler8080::OP_POPD(State8080& state) {
     POP(state, state.d, state.e);
@@ -492,4 +525,23 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
     state.condFlags.carry = sum > byte;
     // note aux carry would be set.
     ++state.programCounter;
+}
+
+
+void Disassembler8080::OP_IND8(State8080 &){}
+void Disassembler8080::OP_OUTD8(State8080 &){}
+
+
+
+void Disassembler8080::generateInterrupt(State8080& state) {
+    // push PC onto the stack
+    uint16_t returnAddress = state.programCounter - 1; // -5 works for ~42476
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    // while there are 8 different numbers other than 2 for RST,
+    // space invaders only uses number 2.
+    state.programCounter = 8 * 2;
+
+
 }

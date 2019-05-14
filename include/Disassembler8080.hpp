@@ -16,6 +16,8 @@ public:
     bool wasUnimplemented = false;
     bool wasTodo = false;
 
+    void generateInterrupt(State8080& state);
+
 private:
 
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done
@@ -45,6 +47,7 @@ private:
     void OP_DADH(State8080&); // 0x29
     void OP_LXISP_D16(State8080&); // 0x31
     void OP_STA_ADR(State8080&); // 0x32
+    void OP_DCRM(State8080&); // 0x35
     void OP_MVIM_D8(State8080&); // 0x36
     void OP_LDA_ADR(State8080&); // 0x3a
     void OP_MVIA_D8(State8080&); // 0x3e
@@ -64,11 +67,14 @@ private:
     void OP_JMPADR(State8080&); // 0xc3
     void OP_PUSHB(State8080&); // 0xc5
     void OP_ADID8(State8080&); // 0xc6
+    void OP_RZ(State8080&); // 0xC8
     void OP_RET(State8080&); // 0xc9
+    void OP_JZ(State8080&); // 0xCA
     void OP_CALLADR(State8080&); // 0xcd
     void OP_POPD(State8080&); // 0xd1
     void OP_OUTD8(State8080&); // 0xd3
     void OP_PUSHD(State8080&); //0xd5
+    void OP_JC(State8080&); //0xDA
     void OP_IND8(State8080&); // 0xDB , this function may not be needed
     void OP_POPH(State8080&); // 0xe1
     void OP_PUSHH(State8080&); // 0xe5
