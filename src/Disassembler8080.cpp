@@ -49,13 +49,13 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
     // Jump instructions
-    opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
-    opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
+    opcodeTable[0xC2] = &Disassembler8080::OP_JNZ;
+    opcodeTable[0xC3] = &Disassembler8080::OP_JMP;
     opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
     opcodeTable[0xDA] = &Disassembler8080::OP_JC;
 
     // Call subroutine instructions
-    opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
+    opcodeTable[0xCD] = &Disassembler8080::OP_CALL;
     // Return from subroutine instructions
     opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
@@ -409,15 +409,15 @@ void Disassembler8080::OP_POPB(State8080& state) {
     POP(state, state.b, state.c);
 }
 // jump to the address if the zero bit is zero
-void Disassembler8080::OP_JNZADR(State8080& state) {
+void Disassembler8080::OP_JNZ(State8080& state) {
     if (state.condFlags.zero == 0)
-        OP_JMPADR(state);
+        OP_JMP(state);
     else // jump is not taken
         state.programCounter += 2;
 }
 
 // jump to address
-void Disassembler8080::OP_JMPADR(State8080& state) {
+void Disassembler8080::OP_JMP(State8080& state) {
     uint8_t lowAdd = state.memory[state.programCounter + 1];
     uint8_t hiAdd = state.memory[state.programCounter + 2];
     uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
@@ -457,13 +457,13 @@ void Disassembler8080::OP_RET(State8080& state) {
 
 void Disassembler8080::OP_JZ(State8080& state) {
     if (state.condFlags.zero == 1)
-        OP_JMPADR(state);
+        OP_JMP(state);
     else
         state.programCounter += 2;
 }
 
 // call a subroutine
-void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
+void Disassembler8080::OP_CALL(State8080& state) { // 0xcd
     uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
     // store the old address to the stack, it's pushed onto the stack
     uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
@@ -476,7 +476,7 @@ void Disassembler8080::OP_CALLADR(State8080& state) { // 0xcd
 
 void Disassembler8080::OP_JC(State8080& state) {
     if (state.condFlags.carry == 1)
-        OP_JMPADR(state);
+        OP_JMP(state);
     else
         state.programCounter += 2;
 }

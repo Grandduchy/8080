@@ -23,8 +23,6 @@ private:
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done
     void todo(State8080&); // an opcode that is currently unimplemented but will eventually be done
 
-    // This cpu will only need 50 instructions in order to run invaders.
-    // This cpu also does not affect the AUX flag, it's not needed for invaders, but notes will be put when it should have been set.
     // The ending extension of an opcode ex D8 or D16 refers to immediate memory; the next byte after the instruction
     // to be loaded and in for use
     // Opcodes are arranged in the opcode's function order
@@ -52,12 +50,12 @@ private:
     void OP_STA_ADR(State8080&); // 0x32
     void OP_LDA_ADR(State8080&); // 0x3a
     // Jump instructions
-    void OP_JNZADR(State8080&); // 0xc2
-    void OP_JMPADR(State8080&); // 0xc3
+    void OP_JNZ(State8080&); // 0xc2
+    void OP_JMP(State8080&); // 0xc3
     void OP_JZ(State8080&); // 0xCA
     void OP_JC(State8080&); //0xDA
     // Call subroutine instructions
-    void OP_CALLADR(State8080&); // 0xcd
+    void OP_CALL(State8080&); // 0xcd
     // Return from subroutine instructions
     void OP_RZ(State8080&); // 0xC8
     void OP_RET(State8080&); // 0xc9
