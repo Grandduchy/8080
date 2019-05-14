@@ -27,31 +27,57 @@ Disassembler8080::Disassembler8080() {
         opcodePtr = &Disassembler8080::unimplemented;
     }
 
-    opcodeTable[0x0] = &Disassembler8080::OP_NOP;
-    opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
-    opcodeTable[0x05] = &Disassembler8080::OP_DCRB;
-    opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
-    opcodeTable[0x09] = &Disassembler8080::OP_DADB;
-    opcodeTable[0x0d] = &Disassembler8080::OP_DCRC;
-    opcodeTable[0x0e] = &Disassembler8080::OP_MVIC_D8;
-    opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
-    opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
-    opcodeTable[0x13] = &Disassembler8080::OP_INXD;
-    opcodeTable[0x19] = &Disassembler8080::OP_DADD;
-    opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
-    opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
-    opcodeTable[0x23] = &Disassembler8080::OP_INXH;
-    opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
-    opcodeTable[0x27] = &Disassembler8080::todo;
-    opcodeTable[0x29] = &Disassembler8080::OP_DADH;
-    opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
-    opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
-    opcodeTable[0x35] = &Disassembler8080::OP_DCRM;
-    opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
-    opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
-    opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
-    opcodeTable[0x56] = &Disassembler8080::OP_MOVD_M;
 
+    // Data Statements
+
+    // Carry Bit Instructions
+
+    // Immediate Instructions
+    opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
+    opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
+    opcodeTable[0x0e] = &Disassembler8080::OP_MVIC_D8;
+    opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
+    opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
+    opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
+    opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
+    opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
+    opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
+    opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
+    opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
+    opcodeTable[0xFE] = &Disassembler8080::OP_CPI_D8;
+    // Direct Addressing Instructions
+    opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
+    opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
+    // Jump instructions
+    opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
+    opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
+    opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
+    opcodeTable[0xDA] = &Disassembler8080::OP_JC;
+
+    // Call subroutine instructions
+    opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
+    // Return from subroutine instructions
+    opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
+    opcodeTable[0xC9] = &Disassembler8080::OP_RET;
+    // RST instructions
+
+    // Interrupt instructions
+    opcodeTable[0xF3] = &Disassembler8080::OP_DI;
+    opcodeTable[0xFB] = &Disassembler8080::OP_EI;
+    // I/O instructions
+    opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
+    opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
+    // Single Register Instructions
+    opcodeTable[0x05] = &Disassembler8080::OP_DCRB;
+    opcodeTable[0x0d] = &Disassembler8080::OP_DCRC;
+    opcodeTable[0x27] = &Disassembler8080::todo; /// <- todo
+    opcodeTable[0x35] = &Disassembler8080::OP_DCRM;
+    // NOP instruction
+    opcodeTable[0x0] = &Disassembler8080::OP_NOP;
+
+    // Data transfer Instructions
+    opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
+    opcodeTable[0x56] = &Disassembler8080::OP_MOVD_M;
     opcodeTable[0x5E] = &Disassembler8080::OP_MOVE_M;
     opcodeTable[0x66] = &Disassembler8080::OP_MOVH_M;
     opcodeTable[0x6F] = &Disassembler8080::OP_MOVL_A;
@@ -60,35 +86,28 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x7B] = &Disassembler8080::OP_MOVA_E;
     opcodeTable[0x7C] = &Disassembler8080::OP_MOVA_H;
     opcodeTable[0x7E] = &Disassembler8080::OP_MOVA_M;
-
+    // Register or memory to accumulator instructions
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
-
+    // Roatate accumulator instructions
+    opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
+    // Register Pair Instructions
+    opcodeTable[0x09] = &Disassembler8080::OP_DADB;
+    opcodeTable[0x13] = &Disassembler8080::OP_INXD;
+    opcodeTable[0x19] = &Disassembler8080::OP_DADD;
+    opcodeTable[0x23] = &Disassembler8080::OP_INXH;
+    opcodeTable[0x29] = &Disassembler8080::OP_DADH;
     opcodeTable[0xC1] = &Disassembler8080::OP_POPB;
-    opcodeTable[0xC2] = &Disassembler8080::OP_JNZADR;
-    opcodeTable[0xC3] = &Disassembler8080::OP_JMPADR;
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
-    opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
-
-    opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
-    opcodeTable[0xC9] = &Disassembler8080::OP_RET;
-    opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
-    opcodeTable[0xCD] = &Disassembler8080::OP_CALLADR;
-
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
-    opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
-    opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
-    opcodeTable[0xDA] = &Disassembler8080::OP_JC;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
-    opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
     opcodeTable[0xEB] = &Disassembler8080::OP_XCHG;
     opcodeTable[0xF1] = &Disassembler8080::OP_POPPSW;
-    opcodeTable[0xF3] = &Disassembler8080::OP_DI;
     opcodeTable[0xF5] = &Disassembler8080::OP_PUSHPSW;
-    opcodeTable[0xFB] = &Disassembler8080::OP_EI;
-    opcodeTable[0xFE] = &Disassembler8080::OP_CPI_D8;
+    // Halt Instruction
+
 }
 
 
