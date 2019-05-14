@@ -20,6 +20,10 @@
     #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) != 1 )
 #endif
 
+#define SETAUX_8(expr) (state.condFlags.auxCarry = (expr & 0xF) == 0xF)
+#define SETAUX_16(expr) (state.condFlags.auxCarry = (expr & 0xFF) == 0xFF)
+
+
 #define UNUSED(param) (void)(param)
 
 Disassembler8080::Disassembler8080() {
@@ -141,7 +145,7 @@ inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
     SETZERO(reg);
     SETSIGN(reg);
     SETPARITY(reg);
-    // Note that we did not modify AUX flag.
+    SETAUX_8(reg);
 }
 
 // Register pair reg1 & reg2 is added to H & L register pair
@@ -391,7 +395,7 @@ void Disassembler8080::OP_ANAA(State8080& state) {
     state.a &= state.a;
     SETPARITY(state.a);
     SETZERO(state.a);
-    SETSIGN(state.a); // <- ?
+    SETSIGN(state.a);
     state.condFlags.carry = 0;
 }
 
@@ -400,7 +404,7 @@ void Disassembler8080::OP_XRAA(State8080& state) {
     state.a ^= state.a;
     SETPARITY(state.a);
     SETZERO(state.a);
-    SETSIGN(state.a); // <- ?
+    SETSIGN(state.a);
     state.condFlags.carry = 0;
 }
 
@@ -436,7 +440,7 @@ void Disassembler8080::OP_ADID8(State8080& state) {
     SETPARITY(sum);
     SETSIGN(sum);
     SETCARRY(sum, 0xFF);
-    // aux carry would have been set here.
+    SETAUX_16(sum);
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
@@ -542,7 +546,7 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
     SETPARITY(sum);
     SETSIGN(sum);
     state.condFlags.carry = sum > byte;
-    // note aux carry would be set.
+    SETAUX_16(sum);
     ++state.programCounter;
 }
 
