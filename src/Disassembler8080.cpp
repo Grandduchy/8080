@@ -95,6 +95,14 @@ Disassembler8080::Disassembler8080() {
 
     // NOP instruction
     opcodeTable[0x0] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x10] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x20] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x30] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x08] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x18] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x28] = &Disassembler8080::OP_NOP;
+    opcodeTable[0x38] = &Disassembler8080::OP_NOP;
+
 
     // Data transfer Instructions
     opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
