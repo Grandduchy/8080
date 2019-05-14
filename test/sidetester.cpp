@@ -93,7 +93,7 @@ int main() {
                     std::chrono::system_clock::now().time_since_epoch()
                  );
         for (int times = 0; times != i; times++) {
-            if (sum == 42433) { // because we do not take into account any cycle accuracy, the point it jump varies by thousands.
+            if (sum == 42433 || sum == 44000) { // because we do not take into account any cycle accuracy, the point it jump varies by thousands.
                 dis.generateInterrupt(state);
                 lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch()

@@ -535,7 +535,7 @@ void Disassembler8080::OP_OUTD8(State8080 &){}
 
 void Disassembler8080::generateInterrupt(State8080& state) {
     // push PC onto the stack
-    uint16_t returnAddress = state.programCounter + 2;
+    uint16_t returnAddress = state.programCounter - 1; // -5 works for ~42476
     state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
     state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
     state.stackPointer -= 2;
