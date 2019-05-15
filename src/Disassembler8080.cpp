@@ -106,15 +106,11 @@ Disassembler8080::Disassembler8080() {
 
     // Data transfer Instructions
     opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
-    opcodeTable[0x56] = &Disassembler8080::OP_MOVD_M;
-    opcodeTable[0x5E] = &Disassembler8080::OP_MOVE_M;
-    opcodeTable[0x66] = &Disassembler8080::OP_MOVH_M;
-    opcodeTable[0x6F] = &Disassembler8080::OP_MOVL_A;
-    opcodeTable[0x77] = &Disassembler8080::OP_MOVM_A;
-    opcodeTable[0x7A] = &Disassembler8080::OP_MOVA_D;
-    opcodeTable[0x7B] = &Disassembler8080::OP_MOVA_E;
-    opcodeTable[0x7C] = &Disassembler8080::OP_MOVA_H;
-    opcodeTable[0x7E] = &Disassembler8080::OP_MOVA_M;
+    // Load all 56 move instructions
+    for (std::size_t i = 0x40; i != 0x80; i++) {
+        if (i == 0x76) continue; // HALT, not a data transfer instruction
+        opcodeTable[i] = &Disassembler8080::OP_MOV;
+    }
     // Register or memory to accumulator instructions
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
@@ -212,22 +208,14 @@ inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     regPair2 = pair & 0x00FF;
 }
 
-// A register from src is loaded into dst, either of them can be memory addresses.
-// for now and for simplicity there is only one instruction that uses the memory location
-// H & L as a dst (0x77), and will throw for now
-inline void Disassembler8080::MOV(State8080& state, uint8_t& dst, uint8_t& src) {
-    if (state.memory[state.programCounter] == 0x77)
-        throw std::runtime_error("0x77 must not use this function.");
+inline void Disassembler8080::MOV(uint8_t& dst, uint8_t& src) {
     dst = src;
 }
-
-// This function is only used for the H & L pair memory location as a src.
-inline void Disassembler8080::MOV(State8080& state, uint8_t& dst) {
-    if (state.memory[state.programCounter] == 0x77)
-        throw std::runtime_error("0x77 must not use this function.");
-    // get the address
-    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
-    dst = state.memory[HL];
+inline void Disassembler8080::MOV_SRC(State8080& state, uint8_t& src) {
+    state.memory[static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l  )] = src;
+}
+inline void Disassembler8080::MOV_DST(State8080& state, uint8_t& dst) {
+    dst = state.memory[static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l  )];
 }
 
 // Pop memory in the stack to the register pair regPair1 & regPair2
@@ -384,6 +372,48 @@ void Disassembler8080::OP_DCRA(State8080& state) {
 }
 
 
+#define MOV_REG(number, reg) \
+    case 0x40 + (number): MOV(reg, state.b); break; \
+    case 0x41 + (number): MOV(reg, state.c); break; \
+    case 0x42 + (number): MOV(reg, state.d); break; \
+    case 0x43 + (number): MOV(reg, state.e); break; \
+    case 0x44 + (number): MOV(reg, state.h); break; \
+    case 0x45 + (number): MOV(reg, state.l); break; \
+    case 0x47 + (number): MOV(reg, state.a); break;
+
+void Disassembler8080::OP_MOV(State8080& state) {
+    uint8_t opcode = state.memory[state.programCounter];
+    switch(opcode) {
+        MOV_REG(0, state.b)
+        MOV_REG(8, state.c)
+        MOV_REG(16, state.d)
+        MOV_REG(24, state.e)
+        MOV_REG(32, state.h)
+        MOV_REG(40, state.l)
+        MOV_REG(56, state.a)
+        case 0x46: MOV_DST(state, state.b); break;
+        case 0x56: MOV_DST(state, state.d); break;
+        case 0x66: MOV_DST(state, state.h); break;
+        case 0x4E: MOV_DST(state, state.c); break;
+        case 0x5E: MOV_DST(state, state.e); break;
+        case 0x6E: MOV_DST(state, state.l); break;
+        case 0x7E: MOV_DST(state, state.a); break;
+
+        case 0x70: MOV_SRC(state, state.b); break;
+        case 0x71: MOV_SRC(state, state.c); break;
+        case 0x72: MOV_SRC(state, state.d); break;
+        case 0x73: MOV_SRC(state, state.e); break;
+        case 0x74: MOV_SRC(state, state.h); break;
+        case 0x75: MOV_SRC(state, state.l); break;
+        case 0x77: MOV_SRC(state, state.a); break;
+        default:
+            throw std::runtime_error("No move operation for opcode" + std::to_string(static_cast<int>(opcode)) );
+    }
+}
+#undef MOV_REG
+
+
+
 void Disassembler8080::OP_MVIC_D8(State8080& state) {
     MVI_D8(state, state.c);
 }
@@ -470,43 +500,6 @@ void Disassembler8080::OP_MVIA_D8(State8080& state) {
     MVI_D8(state, state.a);
 }
 
-void Disassembler8080::OP_MOVD_M(State8080& state) {// 0x56
-    MOV(state, state.d);
-}
-
-void Disassembler8080::OP_MOVE_M(State8080& state) {// 0x5e
-    MOV(state, state.e);
-}
-
-void Disassembler8080::OP_MOVH_M(State8080& state) {// 0x66
-    MOV(state, state.h);
-}
-
-void Disassembler8080::OP_MOVL_A(State8080& state) {// 0x6f
-    MOV(state, state.l, state.a);
-}
-
-// set accumulator to data pointed by HL
-void Disassembler8080::OP_MOVM_A(State8080& state) {// 0x77
-    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
-    state.memory[HL] = state.a;
-}
-
-void Disassembler8080::OP_MOVA_D(State8080& state) {// 0x7a
-    MOV(state, state.a, state.d);
-}
-
-void Disassembler8080::OP_MOVA_E(State8080& state) {// 0x7b
-    MOV(state, state.a, state.e);
-}
-
-void Disassembler8080::OP_MOVA_H(State8080& state) {// 0x7c
-    MOV(state, state.a, state.h);
-}
-
-void Disassembler8080::OP_MOVA_M(State8080& state) {// 0x7e
-    MOV(state, state.a);
-}
 
 // Perform binary and with a and a
 void Disassembler8080::OP_ANAA(State8080& state) {

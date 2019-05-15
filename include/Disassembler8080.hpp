@@ -94,15 +94,9 @@ private:
 
     // Data transfer Instructions
     void OP_LDAXD(State8080&); // 0x1a
-    void OP_MOVD_M(State8080&); // 0x56
-    void OP_MOVE_M(State8080&); // 0x5e
-    void OP_MOVH_M(State8080&); // 0x66
-    void OP_MOVL_A(State8080&); // 0x6f
-    void OP_MOVM_A(State8080&); // 0x77
-    void OP_MOVA_D(State8080&); // 0x7a
-    void OP_MOVA_E(State8080&); // 0x7b
-    void OP_MOVA_H(State8080&); // 0x7c
-    void OP_MOVA_M(State8080&); // 0x7e
+    void OP_MOV(State8080&); // 0x40 - 0x7F
+
+
     // Register or memory to accumulator instructions
     void OP_ANAA(State8080&); // 0xa7
     void OP_XRAA(State8080&); // 0xaf
@@ -135,10 +129,12 @@ private:
     inline void DAD(State8080&, uint8_t&, uint8_t&);
     inline void MVI_D8(State8080&, uint8_t&);
     inline void INX(uint8_t&, uint8_t&);
-    inline void MOV(State8080&, uint8_t& dst, uint8_t& src);
-    inline void MOV(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
+    inline void MOV(uint8_t& dst, uint8_t& src);
+    inline void MOV_DST(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
+    inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst
     inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
+
 };
 
 #endif // DISASSEMBLER8080_HPP
