@@ -173,6 +173,19 @@ void Disassembler8080::runCycle(State8080& state) {
     state.programCounter++;
 }
 
+void Disassembler8080::generateInterrupt(State8080& state) {
+    // push PC onto the stack
+    uint16_t returnAddress = state.programCounter - 1; // -5 works for ~42476
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    // while there are 8 different numbers other than 2 for RST,
+    // space invaders only uses number 2.
+    state.programCounter = 8 * 2;
+}
+
+
+/// ------------- Everything below this is to do with opcodes --------------------
 
 
 // General opcode functions that are done multiple times in each different opcode function
@@ -256,9 +269,13 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
     state.stackPointer -= 2;
 }
 
+
+
 /********************/
 // Opcode functions //
 /********************/
+
+
 
 
 void Disassembler8080::todo(State8080& state) {
@@ -275,7 +292,9 @@ void Disassembler8080::unimplemented(State8080& state) {
     std::cout << std::dec;
 }
 
-// CARRY BIT INSTRUCTIONS
+
+///// CARRY BIT INSTRUCTIONS
+
 
 // set carry to 1
 void Disassembler8080::OP_STC(State8080& state) {
@@ -288,32 +307,203 @@ void Disassembler8080::OP_CMC(State8080& state) {
 }
 
 
+///// IMMEDIATE INSTRUCTIONS
 
-void Disassembler8080::OP_NOP(State8080& state) {
-    // no work needed.
-    UNUSED(state);
-}
 
 // Set pair group B to the next two bytes
 void Disassembler8080::OP_LXIB_D16(State8080& state) {
     LXI_D16(state, state.b, state.c);
 }
 
-
-
-
-
 // Set register B to the next byte
 void Disassembler8080::OP_MVIB_D8(State8080& state) {
     MVI_D8(state, state.b);
 }
 
-void Disassembler8080::OP_DADB(State8080& state) {
-    DAD(state, state.b, state.c);
+void Disassembler8080::OP_MVIC_D8(State8080& state) {
+    MVI_D8(state, state.c);
+}
+
+void Disassembler8080::OP_LXID_D16(State8080& state) {
+    LXI_D16(state, state.d, state.e);
+}
+
+void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
+    LXI_D16(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_MVIH_D8(State8080& state) {
+    MVI_D8(state, state.h);
+}
+
+void Disassembler8080::OP_LXISP_D16(State8080& state) {
+    // the function won't work for this.
+    uint8_t byte1 = state.memory[state.programCounter + 1];
+    uint8_t byte2 = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte2) << 8) | byte1);
+    state.stackPointer = address;
+    state.programCounter += 2;
+}
+
+void Disassembler8080::OP_MVIM_D8(State8080& state) {
+    // function won't work for this, store the byte into some location denoted by H & l pair
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
+    state.memory[address] = state.memory[state.programCounter + 1];
+    ++state.programCounter;
+}
+
+void Disassembler8080::OP_MVIA_D8(State8080& state) {
+    MVI_D8(state, state.a);
+}
+
+// set accumulator to next byte
+void Disassembler8080::OP_ADID8(State8080& state) {
+    uint16_t sum = state.a + state.memory[state.programCounter + 1];
+    SETZERO(sum);
+    SETPARITY(sum);
+    SETSIGN(sum);
+    SETCARRY(sum, 0xFF);
+    SETAUX_16(sum);
+    state.a = 0xFF & sum;
+    ++state.programCounter;
+}
+// perform binary and with next byte with the accumulator
+void Disassembler8080::OP_ANID8(State8080& state) {
+    state.a &= state.memory[state.programCounter + 1];
+    state.condFlags.carry = 0;
+    SETPARITY(state.a);
+    SETZERO(state.a);
+    SETSIGN(state.a);
+    ++state.programCounter;
+}
+
+// compare next byte with accumulator by subtracting, note thtat nothing is set.
+void Disassembler8080::OP_CPI_D8(State8080& state) {
+    uint8_t byte = state.memory[state.programCounter + 1];
+    uint16_t sum = state.a - byte;
+    state.condFlags.zero = byte == state.a;
+    SETPARITY(sum);
+    SETSIGN(sum);
+    state.condFlags.carry = sum > byte;
+    SETAUX_16(sum);
+    ++state.programCounter;
 }
 
 
-// SINGLE REGISTER INSTRUCTIONS
+/////// DIRECT ADDRESSING INSTRUCTIONS
+
+
+// store address of the accumulator to memory location at next two bytes.
+void Disassembler8080::OP_STA_ADR(State8080& state) {
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.memory[address] = state.a;
+    state.programCounter += 2;
+}
+// Set accumulator to the memory stored by the address of the next two bytes
+void Disassembler8080::OP_LDA_ADR(State8080& state) {
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.a = state.memory[address];
+    state.programCounter += 2;
+}
+
+
+//////// JUMP INSTRUCTIONS
+
+
+// jump to the address if the zero bit is zero
+void Disassembler8080::OP_JNZ(State8080& state) {
+    if (state.condFlags.zero == 0)
+        OP_JMP(state);
+    else // jump is not taken
+        state.programCounter += 2;
+}
+
+// jump to address
+void Disassembler8080::OP_JMP(State8080& state) {
+    uint8_t lowAdd = state.memory[state.programCounter + 1];
+    uint8_t hiAdd = state.memory[state.programCounter + 2];
+    uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
+    state.programCounter = addr;
+    --state.programCounter; // program counter will automatically be incremented, so do the inverse
+}
+void Disassembler8080::OP_JZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_JMP(state);
+    else
+        state.programCounter += 2;
+}
+void Disassembler8080::OP_JC(State8080& state) {
+    if (state.condFlags.carry == 1)
+        OP_JMP(state);
+    else
+        state.programCounter += 2;
+}
+
+
+//////// CALL SUBROUTINE INSTRUCTIONS
+
+
+// call a subroutine
+void Disassembler8080::OP_CALL(State8080& state) { // 0xcd
+    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
+    // store the old address to the stack, it's pushed onto the stack
+    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    state.programCounter = newAddress;
+    --state.programCounter; // inverse the increment of the program counter
+ }
+
+
+//////// RETURN FROM SUBROUTINE INSTRUCTIONS
+
+
+// return from a subroutine if zero is set
+void Disassembler8080::OP_RZ(State8080& state) {
+    if (state.condFlags.zero == 1)
+        OP_RET(state);
+}
+
+// return from a subroutine
+void Disassembler8080::OP_RET(State8080& state) {
+    // pop the old address from the stack
+    state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
+    state.stackPointer += 2;
+    // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
+}
+
+
+//////// RST INSTRUCTIONS
+
+
+
+////// INTERRUPT INSTRUCTIONS
+
+
+void Disassembler8080::OP_EI(State8080& state) {
+    state.allowInterrupt = true;
+}
+
+void Disassembler8080::OP_DI(State8080 & state) {
+    state.allowInterrupt = false;
+}
+
+
+////// I/O INSTRUCTIONS
+
+
+void Disassembler8080::OP_IND8(State8080 &){}
+void Disassembler8080::OP_OUTD8(State8080 &){}
+
+
+
+////// SINGLE REGISTER INSTRUCTIONS
+
 
 // Every bit of the accumulator is inverted
 void Disassembler8080::OP_CMA(State8080& state) {
@@ -366,7 +556,6 @@ void Disassembler8080::OP_INRA(State8080& state) { // 0x3C
 }
 
 
-
 void Disassembler8080::OP_DCRB(State8080& state) {
     DCR(state, state.b);
 }
@@ -395,7 +584,35 @@ void Disassembler8080::OP_DCRA(State8080& state) {
     DCR(state, state.a);
 }
 
-// Data Transfer Instructions
+
+////// NOP INSTRUCTION
+
+
+void Disassembler8080::OP_NOP(State8080& state) {
+    // no work needed.
+    UNUSED(state);
+}
+
+
+////// DATA TRANSFER INSTRUCTIONS
+
+
+// Contents of the accumulator is replaced by the location in memory denoted by the register pair
+void Disassembler8080::OP_LDAXD(State8080& state) {
+    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
+    state.a = state.memory[location];
+}
+void Disassembler8080::OP_LDAXB(State8080& state) {
+    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.b) << 8) | state.c);
+    state.a = state.memory[location];
+}
+
+// use a jump table for each move instruction
+// MOV_REG is only for a mov operation between two registers
+// each register for a mov between two have the same format in which register to move to
+// but is displaced by a number, this can be found on the opcode table
+// MOV_DST is different, the source is a memory location
+// MOV_SRC is similarly different, the destination is a memory location (not a register)
 #define MOV_REG(number, reg) \
     case 0x40 + (number): MOV(reg, state.b); break; \
     case 0x41 + (number): MOV(reg, state.c); break; \
@@ -431,7 +648,7 @@ void Disassembler8080::OP_MOV(State8080& state) {
         case 0x75: MOV_SRC(state, state.l); break;
         case 0x77: MOV_SRC(state, state.a); break;
         default:
-            throw std::runtime_error("No move operation for opcode" + std::to_string(static_cast<int>(opcode)) );
+            throw std::runtime_error("No move operation for opcode " + std::to_string(static_cast<int>(opcode)) );
     }
 }
 #undef MOV_REG
@@ -447,97 +664,9 @@ void Disassembler8080::OP_STAXD(State8080& state) {
     state.memory[address] = state.a;
 }
 
-void Disassembler8080::OP_LDAXD(State8080& state) {
-    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
-    state.a = state.memory[location];
-}
-void Disassembler8080::OP_LDAXB(State8080& state) {
-    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.b) << 8) | state.c);
-    state.a = state.memory[location];
-}
 
 
-
-void Disassembler8080::OP_MVIC_D8(State8080& state) {
-    MVI_D8(state, state.c);
-}
-
-void Disassembler8080::OP_RRC(State8080& state) {
-    uint8_t lowestOrderBit = state.a & 0x1;
-    state.a >>= 1;
-    // reference indicates to move the bit to the highest order
-    state.a |= (lowestOrderBit << 7);
-    state.condFlags.carry = (lowestOrderBit == 1);
-}
-
-void Disassembler8080::OP_LXID_D16(State8080& state) {
-    LXI_D16(state, state.d, state.e);
-}
-
-void Disassembler8080::OP_INXD(State8080& state) {
-    INX(state.d, state.e);
-}
-
-void Disassembler8080::OP_DADD(State8080& state) {
-    DAD(state, state.d, state.e);
-}
-
-void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
-    LXI_D16(state, state.h, state.l);
-}
-
-void Disassembler8080::OP_INXH(State8080& state) {
-    INX(state.h, state.l);
-}
-
-void Disassembler8080::OP_MVIH_D8(State8080& state) {
-    MVI_D8(state, state.h);
-}
-
-void Disassembler8080::OP_DADH(State8080& state) {
-    DAD(state, state.h, state.l);
-}
-
-void Disassembler8080::OP_LXISP_D16(State8080& state) {
-    // the function won't work for this.
-    uint8_t byte1 = state.memory[state.programCounter + 1];
-    uint8_t byte2 = state.memory[state.programCounter + 2];
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte2) << 8) | byte1);
-    state.stackPointer = address;
-    state.programCounter += 2;
-}
-
-// store address of the accumulator to memory location at next two bytes.
-void Disassembler8080::OP_STA_ADR(State8080& state) {
-    uint8_t lowByte = state.memory[state.programCounter + 1];
-    uint8_t highByte = state.memory[state.programCounter + 2];
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
-    state.memory[address] = state.a;
-    state.programCounter += 2;
-}
-
-
-
-
-void Disassembler8080::OP_MVIM_D8(State8080& state) {
-    // function won't work for this, store the byte into some location denoted by H & l pair
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
-    state.memory[address] = state.memory[state.programCounter + 1];
-    ++state.programCounter;
-}
-
-// Set accumulator to the memory stored by the address of the next two bytes
-void Disassembler8080::OP_LDA_ADR(State8080& state) {
-    uint8_t lowByte = state.memory[state.programCounter + 1];
-    uint8_t highByte = state.memory[state.programCounter + 2];
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
-    state.a = state.memory[address];
-    state.programCounter += 2;
-}
-
-void Disassembler8080::OP_MVIA_D8(State8080& state) {
-    MVI_D8(state, state.a);
-}
+////////// REGISTER OR MEMORY TO ACCUMULATOR INSTRUCTIONS
 
 
 // Perform binary and with a and a
@@ -559,80 +688,49 @@ void Disassembler8080::OP_XRAA(State8080& state) {
 }
 
 
-void Disassembler8080::OP_POPB(State8080& state) {
-    POP(state, state.b, state.c);
-}
-// jump to the address if the zero bit is zero
-void Disassembler8080::OP_JNZ(State8080& state) {
-    if (state.condFlags.zero == 0)
-        OP_JMP(state);
-    else // jump is not taken
-        state.programCounter += 2;
+/////// ROTATE ACCUMULATOR INSTRUCTIONS
+
+
+
+void Disassembler8080::OP_RRC(State8080& state) {
+    uint8_t lowestOrderBit = state.a & 0x1;
+    state.a >>= 1;
+    // reference indicates to move the bit to the highest order
+    state.a |= (lowestOrderBit << 7);
+    state.condFlags.carry = (lowestOrderBit == 1);
 }
 
-// jump to address
-void Disassembler8080::OP_JMP(State8080& state) {
-    uint8_t lowAdd = state.memory[state.programCounter + 1];
-    uint8_t hiAdd = state.memory[state.programCounter + 2];
-    uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
-    state.programCounter = addr;
-    --state.programCounter; // program counter will automatically be incremented, so do the inverse
+
+/////// REGISTER PAIR INSTRUCTIONS
+
+
+void Disassembler8080::OP_DADB(State8080& state) {
+    DAD(state, state.b, state.c);
+}
+
+void Disassembler8080::OP_DADD(State8080& state) {
+    DAD(state, state.d, state.e);
+}
+
+void Disassembler8080::OP_DADH(State8080& state) {
+    DAD(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_INXD(State8080& state) {
+    INX(state.d, state.e);
+}
+
+void Disassembler8080::OP_INXH(State8080& state) {
+    INX(state.h, state.l);
+}
+
+
+void Disassembler8080::OP_POPB(State8080& state) {
+    POP(state, state.b, state.c);
 }
 
 void Disassembler8080::OP_PUSHB(State8080& state) {
     PUSH(state, state.b, state.c);
-}
-
-// set accumulator to next byte
-void Disassembler8080::OP_ADID8(State8080& state) {
-    uint16_t sum = state.a + state.memory[state.programCounter + 1];
-    SETZERO(sum);
-    SETPARITY(sum);
-    SETSIGN(sum);
-    SETCARRY(sum, 0xFF);
-    SETAUX_16(sum);
-    state.a = 0xFF & sum;
-    ++state.programCounter;
-}
-
-// return from a subroutine if zero is set
-void Disassembler8080::OP_RZ(State8080& state) {
-    if (state.condFlags.zero == 1)
-        OP_RET(state);
-}
-
-// return from a subroutine
-void Disassembler8080::OP_RET(State8080& state) {
-    // pop the old address from the stack
-    state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
-    state.stackPointer += 2;
-    // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
-}
-
-void Disassembler8080::OP_JZ(State8080& state) {
-    if (state.condFlags.zero == 1)
-        OP_JMP(state);
-    else
-        state.programCounter += 2;
-}
-
-// call a subroutine
-void Disassembler8080::OP_CALL(State8080& state) { // 0xcd
-    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
-    // store the old address to the stack, it's pushed onto the stack
-    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
-    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
-    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
-    state.stackPointer -= 2;
-    state.programCounter = newAddress;
-    --state.programCounter; // inverse the increment of the program counter
- }
-
-void Disassembler8080::OP_JC(State8080& state) {
-    if (state.condFlags.carry == 1)
-        OP_JMP(state);
-    else
-        state.programCounter += 2;
 }
 
 void Disassembler8080::OP_POPD(State8080& state) {
@@ -651,22 +749,6 @@ void Disassembler8080::OP_PUSHH(State8080& state) {
     PUSH(state, state.h, state.l);
 }
 
-// perform binary and with next byte with the accumulator
-void Disassembler8080::OP_ANID8(State8080& state) {
-    state.a &= state.memory[state.programCounter + 1];
-    state.condFlags.carry = 0;
-    SETPARITY(state.a);
-    SETZERO(state.a);
-    SETSIGN(state.a);
-    ++state.programCounter;
-}
-
-// swap pairs h&l with d&e
-void Disassembler8080::OP_XCHG(State8080& state) {
-    std::swap(state.h, state.d);
-    std::swap(state.l, state.e);
-}
-
 // pop/push data onto stack w/ PSW and accumulator
 void Disassembler8080::OP_POPPSW(State8080& state) {
     uint8_t PSW = 0;
@@ -680,41 +762,8 @@ void Disassembler8080::OP_PUSHPSW(State8080& state) {
     PUSH(state, state.a, PSW);
 }
 
-void Disassembler8080::OP_EI(State8080& state) {
-    state.allowInterrupt = true;
-}
-
-void Disassembler8080::OP_DI(State8080 & state) {
-    state.allowInterrupt = false;
-}
-
-// compare next byte with accumulator by subtracting, note thtat nothing is set.
-void Disassembler8080::OP_CPI_D8(State8080& state) {
-    uint8_t byte = state.memory[state.programCounter + 1];
-    uint16_t sum = state.a - byte;
-    state.condFlags.zero = byte == state.a;
-    SETPARITY(sum);
-    SETSIGN(sum);
-    state.condFlags.carry = sum > byte;
-    SETAUX_16(sum);
-    ++state.programCounter;
-}
-
-
-void Disassembler8080::OP_IND8(State8080 &){}
-void Disassembler8080::OP_OUTD8(State8080 &){}
-
-
-
-void Disassembler8080::generateInterrupt(State8080& state) {
-    // push PC onto the stack
-    uint16_t returnAddress = state.programCounter - 1; // -5 works for ~42476
-    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
-    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
-    state.stackPointer -= 2;
-    // while there are 8 different numbers other than 2 for RST,
-    // space invaders only uses number 2.
-    state.programCounter = 8 * 2;
-
-
+// swap pairs h&l with d&e
+void Disassembler8080::OP_XCHG(State8080& state) {
+    std::swap(state.h, state.d);
+    std::swap(state.l, state.e);
 }

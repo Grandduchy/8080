@@ -27,13 +27,12 @@ private:
     // to be loaded and in for use
     // Opcodes are arranged in the opcode's function order
 
-
-    // Carry Bit Instructions
+    /// Carry Bit Instructions
     void OP_STC(State8080&); // 0x37
     void OP_CMC(State8080&); // 0x3F
 
 
-    // Immediate Instructions
+    /// Immediate Instructions
     void OP_LXIB_D16(State8080&); // 0x01
     void OP_MVIB_D8(State8080&); // 0x06
     void OP_MVIC_D8(State8080&); // 0x0e
@@ -46,28 +45,42 @@ private:
     void OP_ADID8(State8080&); // 0xc6
     void OP_ANID8(State8080&); // 0xe6
     void OP_CPI_D8(State8080&); // 0xfe
-    // Direct Addressing Instructions
+
+
+    /// Direct Addressing Instructions
     void OP_STA_ADR(State8080&); // 0x32
     void OP_LDA_ADR(State8080&); // 0x3a
-    // Jump instructions
+
+
+    /// Jump instructions
     void OP_JNZ(State8080&); // 0xc2
     void OP_JMP(State8080&); // 0xc3
     void OP_JZ(State8080&); // 0xCA
     void OP_JC(State8080&); //0xDA
-    // Call subroutine instructions
+
+
+    /// Call subroutine instructions
     void OP_CALL(State8080&); // 0xcd
-    // Return from subroutine instructions
+
+
+    /// Return from subroutine instructions
     void OP_RZ(State8080&); // 0xC8
     void OP_RET(State8080&); // 0xc9
-    // RST instructions
 
-    // Interrupt instructions
+
+    /// RST instructions
+
+    /// Interrupt instructions
     void OP_DI(State8080&); // 0xF3
     void OP_EI(State8080&); // 0xfb
-    // I/O instructions
+
+
+    /// I/O instructions
     void OP_OUTD8(State8080&); // 0xd3
     void OP_IND8(State8080&); // 0xDB
-    // Single Register Instructions
+
+
+    /// Single Register Instructions
     void OP_CMA(State8080&); // 0x2F
     void OP_DAA(State8080&); // 0x27
         // INR
@@ -89,37 +102,47 @@ private:
     void OP_DCRM(State8080&); // 0x35
     void OP_DCRA(State8080&); // 0x3D
 
-    // NOP instruction
+
+    /// NOP instruction
     void OP_NOP(State8080&); // 0x00
 
-    // Data transfer Instructions
+
+    /// Data transfer Instructions
     void OP_LDAXD(State8080&); // 0x1a
     void OP_LDAXB(State8080&); // 0x0A;
     void OP_MOV(State8080&); // 0x40 - 0x7F
     void OP_STAXB(State8080&); // 0x02
     void OP_STAXD(State8080&); // 0x12
 
-    // Register or memory to accumulator instructions
+
+    /// Register or memory to accumulator instructions
     void OP_ANAA(State8080&); // 0xa7
     void OP_XRAA(State8080&); // 0xaf
-    // Roatate accumulator instructions
+
+
+    /// Roatate accumulator instructions
     void OP_RRC(State8080&); // 0x0f
 
-    // Register Pair Instructions
+
+    /// Register Pair Instructions
+        // DAD
     void OP_DADB(State8080&); // 0x09
-    void OP_INXD(State8080&); // 0x13
     void OP_DADD(State8080&); // 0x19
-    void OP_INXH(State8080&); // 0x23
     void OP_DADH(State8080&); // 0x29
+        // INX
+    void OP_INXD(State8080&); // 0x13
+    void OP_INXH(State8080&); // 0x23
+        // PUSH/POP
     void OP_POPB(State8080&); // 0xc1
     void OP_PUSHB(State8080&); // 0xc5
     void OP_POPD(State8080&); // 0xd1
     void OP_PUSHD(State8080&); //0xd5
     void OP_POPH(State8080&); // 0xe1
     void OP_PUSHH(State8080&); // 0xe5
-    void OP_XCHG(State8080&); // 0xeb
     void OP_POPPSW(State8080&); // 0xf1
     void OP_PUSHPSW(State8080&); // 0xf5
+
+    void OP_XCHG(State8080&); // 0xeb
     // Halt Instruction
 
 
