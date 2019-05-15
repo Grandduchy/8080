@@ -166,10 +166,8 @@ void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
-    if (opcodeFunc == &Disassembler8080::unimplemented)
-        wasUnimplemented = true;
-    if (opcodeFunc == &Disassembler8080::todo)
-        wasTodo = true;
+    wasUnimplemented = opcodeFunc == &Disassembler8080::unimplemented;
+    wasTodo = opcodeFunc == &Disassembler8080::todo;
     if (opcodeFunc == &Disassembler8080::OP_IND8 || opcodeFunc == &Disassembler8080::OP_OUTD8)
         state.programCounter++;
     state.programCounter++;
