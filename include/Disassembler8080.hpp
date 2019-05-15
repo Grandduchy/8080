@@ -20,6 +20,14 @@ public:
 
 private:
 
+    inline void setZero(State8080& state, const uint16_t& expr) const noexcept;
+    inline void setSign(State8080& state, const uint16_t& expr) const noexcept;
+    inline void setCarry(State8080& state, const uint32_t& expr, const uint16_t& maxVal) const noexcept;
+    inline void setParity(State8080& state, const uint8_t& expr) const noexcept;
+    inline void setAux8(State8080& state, const uint8_t& expr) const noexcept;
+    inline void setAux16(State8080& state, const uint16_t& expr) const noexcept;
+
+
     void unimplemented(State8080&); // an opcode that is unimplemented and will never be done
     void todo(State8080&); // an opcode that is currently unimplemented but will eventually be done
 

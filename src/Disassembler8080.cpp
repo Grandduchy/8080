@@ -9,22 +9,6 @@
 #define DEBUG
 
 #define EXECOPCODE(obj, ptr, state) ((obj).*(ptr))(state) // executes a pointer to a function member with the object
-#define SETZERO(expr) (state.condFlags.zero = (((expr) & 0xff) == 0) ? 1 : 0)
-#define SETSIGN(expr) (state.condFlags.sign = (((expr) & 0x80) != 0) ? 1 : 0 )
-#define SETCARRY(expr, maxVal) (state.condFlags.carry = (expr) > (maxVal))
-// count all bits, if sum is even set flag to 1 if odd set to 0
-// use gnu's optimised function if possible
-#ifdef __GNUC__
-    #define SETPARITY(expr) (state.condFlags.parity = (__builtin_popcount((expr) & 0xFF) & 0x1) != 1)
-#else
-    #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) != 1 )
-#endif
-
-#define SETAUX_8(expr) (state.condFlags.auxCarry = ((expr) & 0xF) == 0xF)
-#define SETAUX_16(expr) (state.condFlags.auxCarry = ((expr) & 0xFF) == 0xFF)
-
-
-#define UNUSED(param) (void)(param)
 
 Disassembler8080::Disassembler8080() {
     for (auto& opcodePtr : opcodeTable) {
@@ -202,6 +186,28 @@ void Disassembler8080::generateInterrupt(State8080& state) {
     state.programCounter = 8 * 2;
 }
 
+inline void Disassembler8080::setZero(State8080& state, const uint16_t& expr) const noexcept {
+    state.condFlags.zero = ((expr & 0xFF) == 0) ? 1 : 0;
+}
+inline void Disassembler8080::setSign(State8080& state, const uint16_t& expr) const noexcept {
+    state.condFlags.sign = ((expr & 0x80) != 0) ? 1 : 0;
+}
+inline void Disassembler8080::setCarry(State8080& state, const uint32_t& expr, const uint16_t& maxVal) const noexcept {
+    state.condFlags.carry = expr > maxVal;
+}
+inline void Disassembler8080::setParity(State8080& state, const uint8_t& expr) const noexcept {
+#ifdef __GNUC__
+    state.condFlags.parity = ((__builtin_popcount(expr) & 0xFF) & 0x1) != 1;
+#else
+    state.condFlags.parity = (std::bitset<8>(expr).count() & 0x1) != 1;
+#endif
+}
+inline void Disassembler8080::setAux8(State8080& state, const uint8_t& expr) const noexcept {
+    state.condFlags.auxCarry = (expr & 0xF) == 0xF;
+}
+inline void Disassembler8080::setAux16(State8080& state, const uint16_t& expr) const noexcept {
+    state.condFlags.auxCarry = (expr & 0xFF) == 0xFF;
+}
 
 /// ------------- Everything below this is to do with opcodes --------------------
 
@@ -218,19 +224,19 @@ inline void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, u
 // Decrement a register
 inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
     --reg;
-    SETZERO(reg);
-    SETSIGN(reg);
-    SETPARITY(reg);
-    SETAUX_8(reg);
+    setZero(state, reg);
+    setSign(state, reg);
+    setParity(state, reg);
+    setAux8(state, reg);
 }
 
 // Increment a register
 inline void Disassembler8080::INR(State8080& state, uint8_t& reg) {
     ++reg;
-    SETZERO(reg);
-    SETSIGN(reg);
-    SETPARITY(reg);
-    SETAUX_8(reg);
+    setZero(state, reg);
+    setSign(state, reg);
+    setParity(state, reg);
+    setAux8(state, reg);
 }
 
 
@@ -240,7 +246,7 @@ inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& 
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
     uint32_t sum = pair + HL;
-    SETCARRY(sum, 0xFFFF);
+    setCarry(state, sum, 0xFFFF);
     sum &= 0xFFFF;
     // set H & L to the new sum.
     state.l = sum & 0x00FF;
@@ -290,11 +296,11 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
 // Add a register to the accumulator, op_add can use this function iff carry = 0
 inline void Disassembler8080::ADC(State8080& state, uint8_t& reg, const uint8_t& carry) {
     uint16_t sum = state.a + reg + carry;
-    SETSIGN(sum);
-    SETPARITY(sum);
-    SETZERO(sum);
-    SETAUX_8(sum & 0xFF);
-    SETCARRY(sum, 0xFF);
+    setSign(state, sum);
+    setParity(state, sum & 0xFF);
+    setZero(state, sum);
+    setAux8(state, sum & 0xFF);
+    setCarry(state,sum, 0xFF);
 }
 
 
@@ -308,14 +314,12 @@ inline void Disassembler8080::ADC(State8080& state, uint8_t& reg, const uint8_t&
 void Disassembler8080::todo(State8080& state) {
     std::cout << std::hex;
     std::cout << "Instruction " << static_cast<int>(state.memory[state.programCounter]) << " marked as todo \n";
-    UNUSED(state);
     std::cout << std::dec;
 }
 
 void Disassembler8080::unimplemented(State8080& state) {
     std::cout << std::hex;
     std::cout << "Instruction " << static_cast<int>(state.memory[state.programCounter]) << " marked as unimplemented \n";
-    UNUSED(state);
     std::cout << std::dec;
 }
 
@@ -386,11 +390,11 @@ void Disassembler8080::OP_MVIA_D8(State8080& state) {
 // set accumulator to next byte
 void Disassembler8080::OP_ADID8(State8080& state) {
     uint16_t sum = state.a + state.memory[state.programCounter + 1];
-    SETZERO(sum);
-    SETPARITY(sum);
-    SETSIGN(sum);
-    SETCARRY(sum, 0xFF);
-    SETAUX_16(sum);
+    setZero(state, sum);
+    setParity(state, sum & 0xFF);
+    setSign(state, sum);
+    setCarry(state, sum, 0xFF);
+    setAux16(state, sum);
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
@@ -398,21 +402,21 @@ void Disassembler8080::OP_ADID8(State8080& state) {
 void Disassembler8080::OP_ANID8(State8080& state) {
     state.a &= state.memory[state.programCounter + 1];
     state.condFlags.carry = 0;
-    SETPARITY(state.a);
-    SETZERO(state.a);
-    SETSIGN(state.a);
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
     ++state.programCounter;
 }
 
-// compare next byte with accumulator by subtracting, note thtat nothing is set.
+// compare next byte with accumulator by subtracting, note that nothing is set.
 void Disassembler8080::OP_CPI_D8(State8080& state) {
     uint8_t byte = state.memory[state.programCounter + 1];
     uint16_t sum = state.a - byte;
     state.condFlags.zero = byte == state.a;
-    SETPARITY(sum);
-    SETSIGN(sum);
+    setParity(state, sum & 0xFF);
+    setSign(state, sum);
     state.condFlags.carry = sum > byte;
-    SETAUX_16(sum);
+    setAux16(state, sum);
     ++state.programCounter;
 }
 
@@ -547,10 +551,10 @@ void Disassembler8080::OP_DAA(State8080& state) {
     if ((state.a & 0xF0) > 0x90 || state.condFlags.carry == 1) {
         uint16_t sum = static_cast<uint16_t>(state.a) + 0x60;
         state.a = sum & 0xFF;
-        SETPARITY(state.a);
-        SETZERO(state.a);
-        SETSIGN(state.a);
-        SETCARRY(sum, 0xFF);
+        setParity(state, state.a);
+        setZero(state, state.a);
+        setSign(state, state.a);
+        setCarry(state, sum, 0xFF);
 
     }
 }
@@ -615,9 +619,8 @@ void Disassembler8080::OP_DCRA(State8080& state) {
 ////// NOP INSTRUCTION
 
 
-void Disassembler8080::OP_NOP(State8080& state) {
-    // no work needed.
-    UNUSED(state);
+void Disassembler8080::OP_NOP(State8080&) {
+    // no work needed
 }
 
 
@@ -752,18 +755,18 @@ void Disassembler8080::OP_ADCA(State8080& state) {
 // Perform binary and with a and a
 void Disassembler8080::OP_ANAA(State8080& state) {
     state.a &= state.a;
-    SETPARITY(state.a);
-    SETZERO(state.a);
-    SETSIGN(state.a);
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
     state.condFlags.carry = 0;
 }
 
 // Perform binary xor with a and a
 void Disassembler8080::OP_XRAA(State8080& state) {
     state.a ^= state.a;
-    SETPARITY(state.a);
-    SETZERO(state.a);
-    SETSIGN(state.a);
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
     state.condFlags.carry = 0;
 }
 
