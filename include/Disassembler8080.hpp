@@ -94,8 +94,10 @@ private:
 
     // Data transfer Instructions
     void OP_LDAXD(State8080&); // 0x1a
+    void OP_LDAXB(State8080&); // 0x0A;
     void OP_MOV(State8080&); // 0x40 - 0x7F
-
+    void OP_STAXB(State8080&); // 0x02
+    void OP_STAXD(State8080&); // 0x12
 
     // Register or memory to accumulator instructions
     void OP_ANAA(State8080&); // 0xa7

@@ -31,12 +31,12 @@ Disassembler8080::Disassembler8080() {
         opcodePtr = &Disassembler8080::unimplemented;
     }
 
-    // Carry Bit Instructions
+    /// Carry Bit Instructions
     opcodeTable[0x37] = &Disassembler8080::OP_STC;
     opcodeTable[0x3F] = &Disassembler8080::OP_CMC;
 
 
-    // Immediate Instructions
+    /// Immediate Instructions
     opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
     opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
     opcodeTable[0x0e] = &Disassembler8080::OP_MVIC_D8;
@@ -49,29 +49,41 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
     opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
     opcodeTable[0xFE] = &Disassembler8080::OP_CPI_D8;
-    // Direct Addressing Instructions
+
+
+
+    /// Direct Addressing Instructions
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
-    // Jump instructions
+
+
+    /// Jump instructions
     opcodeTable[0xC2] = &Disassembler8080::OP_JNZ;
     opcodeTable[0xC3] = &Disassembler8080::OP_JMP;
     opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
     opcodeTable[0xDA] = &Disassembler8080::OP_JC;
 
-    // Call subroutine instructions
+    /// Call subroutine instructions
     opcodeTable[0xCD] = &Disassembler8080::OP_CALL;
-    // Return from subroutine instructions
+
+    /// Return from subroutine instructions
     opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
-    // RST instructions
 
-    // Interrupt instructions
+
+    /// RST instructions
+
+    /// Interrupt instructions
     opcodeTable[0xF3] = &Disassembler8080::OP_DI;
     opcodeTable[0xFB] = &Disassembler8080::OP_EI;
-    // I/O instructions
+
+
+    /// I/O instructions
     opcodeTable[0xD3] = &Disassembler8080::OP_OUTD8;
     opcodeTable[0xDB] = &Disassembler8080::OP_IND8;
-    // Single Register Instructions
+
+
+    /// Single Register Instructions
     opcodeTable[0x2F] = &Disassembler8080::OP_CMA;
     opcodeTable[0x27] = &Disassembler8080::OP_DAA;
         // DCR
@@ -93,7 +105,8 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x34] = &Disassembler8080::OP_INRM;
     opcodeTable[0x3C] = &Disassembler8080::OP_INRA;
 
-    // NOP instruction
+
+    /// NOP instruction
     opcodeTable[0x0] = &Disassembler8080::OP_NOP;
     opcodeTable[0x10] = &Disassembler8080::OP_NOP;
     opcodeTable[0x20] = &Disassembler8080::OP_NOP;
@@ -104,19 +117,28 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x38] = &Disassembler8080::OP_NOP;
 
 
-    // Data transfer Instructions
+    /// Data transfer Instructions
     opcodeTable[0x1a] = &Disassembler8080::OP_LDAXD;
     // Load all 56 move instructions
     for (std::size_t i = 0x40; i != 0x80; i++) {
         if (i == 0x76) continue; // HALT, not a data transfer instruction
         opcodeTable[i] = &Disassembler8080::OP_MOV;
     }
-    // Register or memory to accumulator instructions
+    opcodeTable[0x02] = &Disassembler8080::OP_STAXB;
+    opcodeTable[0x12] = &Disassembler8080::OP_STAXD;
+    opcodeTable[0x0A] = &Disassembler8080::OP_LDAXB;
+
+
+    /// Register or memory to accumulator instructions
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
-    // Roatate accumulator instructions
+
+
+    /// Roatate accumulator instructions
     opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
-    // Register Pair Instructions
+
+
+    /// Register Pair Instructions
     opcodeTable[0x09] = &Disassembler8080::OP_DADB;
     opcodeTable[0x13] = &Disassembler8080::OP_INXD;
     opcodeTable[0x19] = &Disassembler8080::OP_DADD;
@@ -131,6 +153,8 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0xEB] = &Disassembler8080::OP_XCHG;
     opcodeTable[0xF1] = &Disassembler8080::OP_POPPSW;
     opcodeTable[0xF5] = &Disassembler8080::OP_PUSHPSW;
+
+
     // Halt Instruction
 
 }
@@ -371,7 +395,7 @@ void Disassembler8080::OP_DCRA(State8080& state) {
     DCR(state, state.a);
 }
 
-
+// Data Transfer Instructions
 #define MOV_REG(number, reg) \
     case 0x40 + (number): MOV(reg, state.b); break; \
     case 0x41 + (number): MOV(reg, state.c); break; \
@@ -412,6 +436,26 @@ void Disassembler8080::OP_MOV(State8080& state) {
 }
 #undef MOV_REG
 
+// Contents of accumulator is placed into memory location denoted by register pair
+void Disassembler8080::OP_STAXB(State8080& state) {
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.b) << 8) | state.c);
+    state.memory[address] = state.a;
+
+}
+void Disassembler8080::OP_STAXD(State8080& state) {
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.d) << 8) | state.e);
+    state.memory[address] = state.a;
+}
+
+void Disassembler8080::OP_LDAXD(State8080& state) {
+    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
+    state.a = state.memory[location];
+}
+void Disassembler8080::OP_LDAXB(State8080& state) {
+    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.b) << 8) | state.c);
+    state.a = state.memory[location];
+}
+
 
 
 void Disassembler8080::OP_MVIC_D8(State8080& state) {
@@ -436,11 +480,6 @@ void Disassembler8080::OP_INXD(State8080& state) {
 
 void Disassembler8080::OP_DADD(State8080& state) {
     DAD(state, state.d, state.e);
-}
-
-void Disassembler8080::OP_LDAXD(State8080& state) {
-    uint16_t location = static_cast<uint16_t>( (static_cast<uint16_t>(state.d) << 8) | state.e);
-    state.a = state.memory[location];
 }
 
 void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
