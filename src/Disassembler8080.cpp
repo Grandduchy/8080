@@ -20,8 +20,8 @@
     #define SETPARITY(expr) (state.condFlags.parity = (( std::bitset<sizeof(decltype(expr)) * 8>((expr) & 0xFF).count()) & 0x1 ) != 1 )
 #endif
 
-#define SETAUX_8(expr) (state.condFlags.auxCarry = (expr & 0xF) == 0xF)
-#define SETAUX_16(expr) (state.condFlags.auxCarry = (expr & 0xFF) == 0xFF)
+#define SETAUX_8(expr) (state.condFlags.auxCarry = ((expr) & 0xF) == 0xF)
+#define SETAUX_16(expr) (state.condFlags.auxCarry = ((expr) & 0xFF) == 0xFF)
 
 
 #define UNUSED(param) (void)(param)
@@ -130,6 +130,24 @@ Disassembler8080::Disassembler8080() {
 
 
     /// Register or memory to accumulator instructions
+    opcodeTable[0x80] = &Disassembler8080::OP_ADDB;
+    opcodeTable[0x81] = &Disassembler8080::OP_ADDC;
+    opcodeTable[0x82] = &Disassembler8080::OP_ADDD;
+    opcodeTable[0x83] = &Disassembler8080::OP_ADDE;
+    opcodeTable[0x84] = &Disassembler8080::OP_ADDH;
+    opcodeTable[0x85] = &Disassembler8080::OP_ADDL;
+    opcodeTable[0x86] = &Disassembler8080::OP_ADDM;
+    opcodeTable[0x87] = &Disassembler8080::OP_ADDA;
+    opcodeTable[0x88] = &Disassembler8080::OP_ADCB;
+    opcodeTable[0x89] = &Disassembler8080::OP_ADCC;
+    opcodeTable[0x8A] = &Disassembler8080::OP_ADCD;
+    opcodeTable[0x8B] = &Disassembler8080::OP_ADCE;
+    opcodeTable[0x8C] = &Disassembler8080::OP_ADCH;
+    opcodeTable[0x8D] = &Disassembler8080::OP_ADCL;
+    opcodeTable[0x8E] = &Disassembler8080::OP_ADCM;
+    opcodeTable[0x8F] = &Disassembler8080::OP_ADCA;
+
+
     opcodeTable[0xA7] = &Disassembler8080::OP_ANAA;
     opcodeTable[0xAF] = &Disassembler8080::OP_XRAA;
 
@@ -269,6 +287,15 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
     state.stackPointer -= 2;
 }
 
+// Add a register to the accumulator, op_add can use this function iff carry = 0
+inline void Disassembler8080::ADC(State8080& state, uint8_t& reg, const uint8_t& carry) {
+    uint16_t sum = state.a + reg + carry;
+    SETSIGN(sum);
+    SETPARITY(sum);
+    SETZERO(sum);
+    SETAUX_8(sum & 0xFF);
+    SETCARRY(sum, 0xFF);
+}
 
 
 /********************/
@@ -668,6 +695,59 @@ void Disassembler8080::OP_STAXD(State8080& state) {
 
 ////////// REGISTER OR MEMORY TO ACCUMULATOR INSTRUCTIONS
 
+void Disassembler8080::OP_ADDB(State8080& state) {
+    ADC(state, state.b, 0);
+}
+void Disassembler8080::OP_ADDC(State8080& state) {
+    ADC(state, state.c, 0);
+}
+void Disassembler8080::OP_ADDD(State8080& state) {
+    ADC(state, state.d, 0);
+}
+void Disassembler8080::OP_ADDE(State8080& state) {
+    ADC(state, state.e, 0);
+}
+void Disassembler8080::OP_ADDH(State8080& state) {
+    ADC(state, state.h, 0);
+}
+void Disassembler8080::OP_ADDL(State8080& state) {
+    ADC(state, state.l, 0);
+}
+void Disassembler8080::OP_ADDM(State8080& state) {
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[address];
+    ADC(state, byte, 0);
+}
+void Disassembler8080::OP_ADDA(State8080& state) {
+    ADC(state, state.a, 0);
+}
+
+void Disassembler8080::OP_ADCB(State8080& state) {
+    ADC(state, state.b, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCC(State8080& state) {
+    ADC(state, state.c, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCD(State8080& state) {
+    ADC(state, state.d, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCE(State8080& state) {
+    ADC(state, state.e, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCH(State8080& state) {
+    ADC(state, state.h, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCL(State8080& state) {
+    ADC(state, state.l, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCM(State8080& state) {
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    uint8_t& byte = state.memory[address];
+    ADC(state, byte, state.condFlags.carry);
+}
+void Disassembler8080::OP_ADCA(State8080& state) {
+    ADC(state, state.a, state.condFlags.carry);
+}
 
 // Perform binary and with a and a
 void Disassembler8080::OP_ANAA(State8080& state) {
