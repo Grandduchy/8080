@@ -181,10 +181,10 @@ inline void Disassembler8080::setParity(State8080& state, const uint8_t& expr) c
 #endif
 }
 inline void Disassembler8080::setAux8(State8080& state, const uint8_t& expr) const noexcept {
-    state.condFlags.auxCarry = (expr & 0xF) == 0xF;
+    state.condFlags.auxCarry = (expr & 0xF) != 0xF;
 }
 inline void Disassembler8080::setAux16(State8080& state, const uint16_t& expr) const noexcept {
-    state.condFlags.auxCarry = (expr & 0xFF) == 0xFF;
+    state.condFlags.auxCarry = (expr & 0xFF) != 0xFF;
 }
 
 /// ------------- Everything below this is to do with opcodes --------------------
@@ -274,6 +274,7 @@ inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t&
 // Add a register to the accumulator with the carry flag
 inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) {
     uint16_t sum = state.a + reg + state.condFlags.carry;
+    state.a = sum & 0xFF;
     setSign(state, sum);
     setParity(state, sum & 0xFF);
     setZero(state, sum);
@@ -284,6 +285,7 @@ inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) {
 // Add a register to the accumulator
 inline void Disassembler8080::ADD(State8080& state, const uint8_t& reg) {
     uint16_t sum = state.a + reg;
+    state.a = sum & 0xFF;
     setSign(state, sum);
     setParity(state, sum & 0xFF);
     setZero(state, sum);
