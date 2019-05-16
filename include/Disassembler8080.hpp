@@ -127,8 +127,10 @@ private:
     void OP_REG_ACC(State8080&); // 0x80 - 0xBF
 
     /// Roatate accumulator instructions
-    void OP_RRC(State8080&); // 0x0f
-
+    void OP_RRC(State8080&); // 0x0F
+    void OP_RLC(State8080&); // 0x07
+    void OP_RAL(State8080&); // 0x17
+    void OP_RAR(State8080&); // 0x1F
 
     /// Register Pair Instructions
         // DAD

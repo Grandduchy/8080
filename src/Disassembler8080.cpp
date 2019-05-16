@@ -112,12 +112,16 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x12] = &Disassembler8080::OP_STAXD;
     opcodeTable[0x0A] = &Disassembler8080::OP_LDAXB;
 
+    /// Register or memory to accumulator instructions
     for (std::size_t i = 0x80; i != 0xC0; i++) {
         opcodeTable[i] = &Disassembler8080::OP_REG_ACC;
     }
 
     /// Roatate accumulator instructions
     opcodeTable[0x0f] = &Disassembler8080::OP_RRC;
+    opcodeTable[0x07] = &Disassembler8080::OP_RLC;
+    opcodeTable[0x17] = &Disassembler8080::OP_RAL;
+    opcodeTable[0x1F] = &Disassembler8080::OP_RAR;
 
 
     /// Register Pair Instructions
@@ -790,15 +794,41 @@ void Disassembler8080::OP_REG_ACC(State8080& state) {
 
 /////// ROTATE ACCUMULATOR INSTRUCTIONS
 
-
-
+// Rotate the accumulator to the right
 void Disassembler8080::OP_RRC(State8080& state) {
     uint8_t lowestOrderBit = state.a & 0x1;
     state.a >>= 1;
     // reference indicates to move the bit to the highest order
     state.a |= (lowestOrderBit << 7);
-    state.condFlags.carry = (lowestOrderBit == 1);
+    state.condFlags.carry = lowestOrderBit;
 }
+
+// Rotate the accumulator to the left
+void Disassembler8080::OP_RLC(State8080& state) {
+    uint8_t highestOrderBit = (state.a & 0x80) >> 7;
+    state.a <<= 1;
+    state.a |= highestOrderBit; // move the bit to the lowest order
+    state.condFlags.carry = highestOrderBit;
+}
+
+// Rotate the accumulator to the left with a carry
+// Rotate the accumulator, then swap the highest order bit with the carry bit
+// no wrapping is done in these two functions.
+void Disassembler8080::OP_RAL(State8080& state) {
+    uint8_t highestOrderBit = (state.a & 0x80) >> 7;
+    state.a <<= 1;
+    state.a |= (state.condFlags.carry << 7); // put carry into highest order bit
+    state.condFlags.carry = highestOrderBit; // put hob into carry;
+}
+
+// Rotate the accumulator to the right with carry
+void Disassembler8080::OP_RAR(State8080& state) {
+    uint8_t lowestOrderBit = state.a & 0x1;
+    state.a >>= 1;
+    state.a |= (state.condFlags.carry << 7); // put carry into highest order bit
+    state.condFlags.carry = lowestOrderBit;
+}
+
 
 
 /////// REGISTER PAIR INSTRUCTIONS
