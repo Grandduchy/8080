@@ -124,31 +124,7 @@ private:
 
 
     /// Register or memory to accumulator instructions
-    // might want to use a jump table for this later on.
-    void OP_ADDB(State8080&); // 0x80
-    void OP_ADDC(State8080&); // 0x81
-    void OP_ADDD(State8080&); // ...
-    void OP_ADDE(State8080&);
-    void OP_ADDH(State8080&);
-    void OP_ADDL(State8080&);
-    void OP_ADDM(State8080&);
-    void OP_ADDA(State8080&);
-    void OP_ADCB(State8080&);
-    void OP_ADCC(State8080&);
-    void OP_ADCD(State8080&);
-    void OP_ADCE(State8080&);
-    void OP_ADCH(State8080&);
-    void OP_ADCL(State8080&);
-    void OP_ADCM(State8080&); // ...
-    void OP_ADCA(State8080&); // 0x8F
-
-    void OP_ANAA(State8080&); // 0xa7
-    void OP_XRAA(State8080&); // 0xaf
-
-
-
-
-
+    void OP_REG_ACC(State8080&); // 0x80 - 0xBF
 
     /// Roatate accumulator instructions
     void OP_RRC(State8080&); // 0x0f
@@ -189,7 +165,15 @@ private:
     inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst
     inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
-    inline void ADC(State8080&, uint8_t& reg, const uint8_t& carry);
+
+    inline void ADD(State8080&, const uint8_t& reg);
+    inline void ADC(State8080&, const uint8_t& reg);
+    inline void SUB(State8080&, const uint8_t& reg);
+    inline void SBB(State8080&, const uint8_t& reg);
+    inline void XRA(State8080&, const uint8_t& reg);
+    inline void ANA(State8080&, const uint8_t& reg);
+    inline void ORA(State8080&, const uint8_t& reg);
+    inline void CMP(State8080&, const uint8_t& reg);
 
 };
 
