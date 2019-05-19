@@ -419,6 +419,30 @@ BOOST_AUTO_TEST_CASE( other_tests) {
             BOOST_ERROR("0xA2 OP LDA ADR failure");
 
     }
+    { // OP SHLD 0x22
+        state.clearAll();
+        memory[0] = 0x22;
+        memory[1] = 0x0A; // memory @ 0x010A
+        memory[2] = 0x01;
+        state.h = 0xAE;
+        state.l = 0x29;
+        dis.runCycle(state);
+        bool passed = memory[0x010A] == 0x29 && memory[0x010B] == 0xAE;
+        if (!passed)
+            BOOST_ERROR("0x22 SHLD failure");
+    }
+    { // OP LHLD 0x2A
+        state.clearAll();
+        memory[0] = 0x2A;
+        memory[1] = 0x5B; // memory @ 0x025B
+        memory[2] = 0x02;
+        memory[0x025B] = 0xFF;
+        memory[0x025C] = 0x03;
+        dis.runCycle(state);
+        bool passed = state.l == 0xFF && state.h == 0x03;
+        if (!passed)
+            BOOST_ERROR("0x2A LHLD failure");
+    }
     { // MOV tests
         state.clearAll();
         // test special 0x77

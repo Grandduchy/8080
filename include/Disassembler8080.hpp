@@ -70,6 +70,8 @@ private:
     /// Direct Addressing Instructions
     void OP_STA_ADR(State8080&); // 0x32
     void OP_LDA_ADR(State8080&); // 0x3a
+    void OP_SHLD(State8080&); // 0x22
+    void OP_LHLD(State8080&); // 0x2A
 
 
     /// Jump instructions

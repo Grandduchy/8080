@@ -47,6 +47,8 @@ Disassembler8080::Disassembler8080() {
     /// Direct Addressing Instructions
     opcodeTable[0x32] = &Disassembler8080::OP_STA_ADR;
     opcodeTable[0x3A] = &Disassembler8080::OP_LDA_ADR;
+    opcodeTable[0x22] = &Disassembler8080::OP_SHLD;
+    opcodeTable[0x2A] = &Disassembler8080::OP_LHLD;
 
 
     /// Jump instructions
@@ -602,6 +604,28 @@ void Disassembler8080::OP_LDA_ADR(State8080& state) {
     uint8_t highByte = state.memory[state.programCounter + 2];
     uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
     state.a = state.memory[address];
+    state.programCounter += 2;
+}
+
+// L is stored at the address of the next two bytes
+// H is stored at the address + 1
+void Disassembler8080::OP_SHLD(State8080& state){
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.memory[address] = state.l;
+    state.memory[address + 1] = state.h;
+    state.programCounter += 2;
+}
+
+// Opposite of SHLD, L is loaded from the address of the next two bytes
+// H is loaded from the address + 1
+void Disassembler8080::OP_LHLD(State8080& state){
+    uint8_t lowByte = state.memory[state.programCounter + 1];
+    uint8_t highByte = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(highByte) << 8) | lowByte);
+    state.l = state.memory[address];
+    state.h = state.memory[address + 1];
     state.programCounter += 2;
 }
 
