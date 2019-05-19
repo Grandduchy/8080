@@ -70,8 +70,11 @@ Disassembler8080::Disassembler8080() {
     }
 
     /// Return from subroutine instructions
-    opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
+    for (std::size_t i = 0xC0; i != 0xF8 + 8; i += 8) {
+        opcodeTable[i] = &Disassembler8080::OP_RET;
+    }
     opcodeTable[0xC9] = &Disassembler8080::OP_RET;
+    opcodeTable[0xD9] = &Disassembler8080::OP_RET;
 
 
     /// RST instructions
@@ -433,6 +436,16 @@ inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcep
     }
  }
 
+// return from a subroutine
+inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept {
+    if (canRet) {
+        // pop the old address from the stack
+        state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
+        state.stackPointer += 2;
+        // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
+    }
+}
+
 /********************/
 // Opcode functions //
 /********************/
@@ -716,19 +729,24 @@ void Disassembler8080::OP_CALL(State8080& state) {
 //////// RETURN FROM SUBROUTINE INSTRUCTIONS
 
 
-// return from a subroutine if zero is set
-void Disassembler8080::OP_RZ(State8080& state) {
-    if (state.condFlags.zero == 1)
-        OP_RET(state);
+void Disassembler8080::OP_RET(State8080& state) {
+    uint8_t opcode = state.memory[state.programCounter];
+    switch(opcode) {
+        case 0xC9: case 0xD9:
+            RET(state, true); break;
+        case 0xD8: RET(state, state.condFlags.carry == 1); break; // RC
+        case 0xD0: RET(state, state.condFlags.carry == 0); break; //RNC
+        case 0xC8: RET(state, state.condFlags.zero == 1); break; // RZ
+        case 0xC0: RET(state, state.condFlags.zero == 0); break; // RNZ
+        case 0xF8: RET(state, state.condFlags.sign == 1); break; //RM
+        case 0xF0: RET(state, state.condFlags.sign == 0); break; // RP
+        case 0xE8: RET(state, state.condFlags.parity == 1); break; // RPE
+        case 0xE0: RET(state, state.condFlags.parity == 0); break; // RPO
+        default:
+            throw std::runtime_error("opcode doesn't have a return command opcode (dec) : " + std::to_string(static_cast<int>(opcode)) );
+    }
 }
 
-// return from a subroutine
-void Disassembler8080::OP_RET(State8080& state) {
-    // pop the old address from the stack
-    state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
-    state.stackPointer += 2;
-    // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
-}
 
 
 //////// RST INSTRUCTIONS

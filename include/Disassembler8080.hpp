@@ -79,13 +79,11 @@ private:
 
 
     /// Call subroutine instructions
-    void OP_CALL(State8080&); // 0xcd
+    void OP_CALL(State8080&);
 
 
     /// Return from subroutine instructions
-    void OP_RZ(State8080&); // 0xC8
-    void OP_RET(State8080&); // 0xc9
-
+    void OP_RET(State8080&);
 
     /// RST instructions
 
@@ -191,6 +189,7 @@ private:
     inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void JUMP(State8080&, bool canJump) const noexcept;
     inline void CALL(State8080&, bool canJump) const noexcept;
+    inline void RET(State8080&, bool canRet) const noexcept;
 
     inline void ADD(State8080&, const uint8_t& reg);
     inline void ADC(State8080&, const uint8_t& reg);
