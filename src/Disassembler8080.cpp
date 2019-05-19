@@ -6,8 +6,6 @@
 
 #include "Disassembler8080.hpp"
 
-#define DEBUG
-
 #define EXECOPCODE(obj, ptr, state) ((obj).*(ptr))(state) // executes a pointer to a function member with the object
 
 Disassembler8080::Disassembler8080() {
@@ -178,6 +176,7 @@ inline void Disassembler8080::setCarry(State8080& state, const uint32_t& expr, c
     state.condFlags.carry = expr > maxVal;
 }
 inline void Disassembler8080::setParity(State8080& state, const uint8_t& expr) const noexcept {
+ // if possible use GNU's optimised function for popcount
 #ifdef __GNUC__
     state.condFlags.parity = ((__builtin_popcount(expr) & 0xFF) & 0x1) != 1;
 #else
