@@ -768,8 +768,12 @@ void Disassembler8080::OP_DI(State8080 & state) {
 ////// I/O INSTRUCTIONS
 
 
-void Disassembler8080::OP_IND8(State8080 &){}
-void Disassembler8080::OP_OUTD8(State8080 &){}
+void Disassembler8080::OP_IND8(State8080& state) {
+    todo(state);
+}
+void Disassembler8080::OP_OUTD8(State8080& state) {
+    todo(state);
+}
 
 
 
