@@ -1,10 +1,15 @@
 #ifndef TESTER_H
 #define TESTER_H
 
-// unmark one to run a specific test
-// unmark both to run the main program
+// commout out all but one to run a specific test
+// comment out testenable to run main program
+#define TESTENABLE
 
-#define OP_TEST
-//#define sideTest
+#ifdef TESTENABLE
+
+    #define OPTEST
+    //#define MANUALTEST
+
+#endif // TESTENABLE
 
 #endif // TESTER_H

@@ -8,8 +8,8 @@ SOURCES += \
         src/Disassembler8080.cpp \
         src/State8080.cpp \
         src/main.cpp \
-        test/sidetester.cpp \
-        test/test.cpp
+        test/manualtest.cpp \
+        test/optest.cpp
 
 HEADERS += \
     include/ConditionFlags.hpp \

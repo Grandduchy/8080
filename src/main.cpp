@@ -1,7 +1,7 @@
 
 #include "tester.h"
 
-#if !defined(OP_TEST) && !defined(sideTest)
+#ifndef TESTENABLE
 
 #include <iostream>
 #include <chrono>
