@@ -123,20 +123,34 @@ Disassembler8080::Disassembler8080() {
 
 
     /// Register Pair Instructions
+        // DAD
     opcodeTable[0x09] = &Disassembler8080::OP_DADB;
-    opcodeTable[0x13] = &Disassembler8080::OP_INXD;
     opcodeTable[0x19] = &Disassembler8080::OP_DADD;
-    opcodeTable[0x23] = &Disassembler8080::OP_INXH;
     opcodeTable[0x29] = &Disassembler8080::OP_DADH;
+    opcodeTable[0x39] = &Disassembler8080::OP_DADSP;
+        // INX
+    opcodeTable[0x03] = &Disassembler8080::OP_INXB;
+    opcodeTable[0x13] = &Disassembler8080::OP_INXD;
+    opcodeTable[0x23] = &Disassembler8080::OP_INXH;
+    opcodeTable[0x33] = &Disassembler8080::OP_INXSP;
+        // DCX
+    opcodeTable[0x0B] = &Disassembler8080::OP_DCXB;
+    opcodeTable[0x1B] = &Disassembler8080::OP_DCXD;
+    opcodeTable[0x2B] = &Disassembler8080::OP_DCXH;
+    opcodeTable[0x3B] = &Disassembler8080::OP_DCXSP;
+        // PUSH/POP
     opcodeTable[0xC1] = &Disassembler8080::OP_POPB;
     opcodeTable[0xC5] = &Disassembler8080::OP_PUSHB;
     opcodeTable[0xD1] = &Disassembler8080::OP_POPD;
     opcodeTable[0xD5] = &Disassembler8080::OP_PUSHD;
     opcodeTable[0xE1] = &Disassembler8080::OP_POPH;
     opcodeTable[0xE5] = &Disassembler8080::OP_PUSHH;
-    opcodeTable[0xEB] = &Disassembler8080::OP_XCHG;
     opcodeTable[0xF1] = &Disassembler8080::OP_POPPSW;
     opcodeTable[0xF5] = &Disassembler8080::OP_PUSHPSW;
+
+    opcodeTable[0xE3] = &Disassembler8080::OP_XTHL;
+    opcodeTable[0xEB] = &Disassembler8080::OP_XCHG;
+    opcodeTable[0xF9] = &Disassembler8080::OP_SPHL;
 
 
     // Halt Instruction
@@ -246,6 +260,14 @@ inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     ++pair;
     // store into the registers
+    regPair1 = (pair & 0xFF00) >> 8;
+    regPair2 = pair & 0x00FF;
+}
+
+// A register pair is decremented by one and stored into the pair, same as INX
+inline void Disassembler8080::DCX(uint8_t& regPair1, uint8_t regPair2) {
+    uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
+    --pair;
     regPair1 = (pair & 0xFF00) >> 8;
     regPair2 = pair & 0x00FF;
 }
@@ -845,12 +867,10 @@ void Disassembler8080::OP_DADH(State8080& state) {
     DAD(state, state.h, state.l);
 }
 
-void Disassembler8080::OP_INXD(State8080& state) {
-    INX(state.d, state.e);
-}
-
-void Disassembler8080::OP_INXH(State8080& state) {
-    INX(state.h, state.l);
+void Disassembler8080::OP_DADSP(State8080& state) {
+    uint8_t upperSP = (state.stackPointer & 0xFF00) >> 8;
+    uint8_t lowerSP = state.stackPointer & 0xFF;
+    DAD(state, upperSP, lowerSP);
 }
 
 
@@ -891,8 +911,61 @@ void Disassembler8080::OP_PUSHPSW(State8080& state) {
     PUSH(state, state.a, PSW);
 }
 
+void Disassembler8080::OP_INXB(State8080& state) {
+    INX(state.b, state.c);
+}
+
+void Disassembler8080::OP_INXD(State8080& state) {
+    INX(state.d, state.e);
+}
+
+void Disassembler8080::OP_INXH(State8080& state) {
+    INX(state.h, state.l);
+}
+
+void Disassembler8080::OP_INXSP(State8080& state) {
+    uint8_t upperSP = (state.stackPointer & 0xFF00) >> 8;
+    uint8_t lowerSP = state.stackPointer & 0xFF;
+    INX(upperSP, lowerSP);
+}
+
+void Disassembler8080::OP_DCXB(State8080& state) {
+    DCX(state.b, state.c);
+}
+
+void Disassembler8080::OP_DCXD(State8080& state) {
+    DCX(state.d, state.e);
+}
+
+void Disassembler8080::OP_DCXH(State8080& state) {
+    DCX(state.h, state.l);
+}
+
+void Disassembler8080::OP_DCXSP(State8080& state) {
+    uint8_t upperSP = (state.stackPointer & 0xFF00) >> 8;
+    uint8_t lowerSP = state.stackPointer & 0xFF;
+    DCX(upperSP, lowerSP);
+}
+
 // swap pairs h&l with d&e
 void Disassembler8080::OP_XCHG(State8080& state) {
     std::swap(state.h, state.d);
     std::swap(state.l, state.e);
+}
+
+// Exchange the stack
+// L and the byte by SP are swapped
+// H and the byte by SP + 1 are swapped
+// SP does not change
+void Disassembler8080::OP_XTHL(State8080& state) {
+    uint8_t& byteSP = state.memory[state.stackPointer];
+    uint8_t& byteSP1 = state.memory[state.stackPointer + 1];
+    std::swap(byteSP, state.l);
+    std::swap(byteSP1, state.h);
+}
+
+// SP now points to the address by the H & L registers
+void Disassembler8080::OP_SPHL(State8080& state) {
+    uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    state.stackPointer = HL;
 }

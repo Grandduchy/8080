@@ -137,9 +137,17 @@ private:
     void OP_DADB(State8080&); // 0x09
     void OP_DADD(State8080&); // 0x19
     void OP_DADH(State8080&); // 0x29
+    void OP_DADSP(State8080&); // 0x39
         // INX
+    void OP_INXB(State8080&); // 0x03
     void OP_INXD(State8080&); // 0x13
     void OP_INXH(State8080&); // 0x23
+    void OP_INXSP(State8080&); // 0x33
+        // DCX
+    void OP_DCXB(State8080&); // 0x0B
+    void OP_DCXD(State8080&); // 0x1B
+    void OP_DCXH(State8080&); // 0x2B
+    void OP_DCXSP(State8080&); // 0x3B
         // PUSH/POP
     void OP_POPB(State8080&); // 0xc1
     void OP_PUSHB(State8080&); // 0xc5
@@ -150,7 +158,9 @@ private:
     void OP_POPPSW(State8080&); // 0xf1
     void OP_PUSHPSW(State8080&); // 0xf5
 
+    void OP_XTHL(State8080&); // 0xE3
     void OP_XCHG(State8080&); // 0xeb
+    void OP_SPHL(State8080&); // 0xF9
     // Halt Instruction
 
 
@@ -162,6 +172,7 @@ private:
     inline void DAD(State8080&, uint8_t&, uint8_t&);
     inline void MVI_D8(State8080&, uint8_t&);
     inline void INX(uint8_t&, uint8_t&);
+    inline void DCX(uint8_t& regPair1, uint8_t regPair2);
     inline void MOV(uint8_t& dst, uint8_t& src);
     inline void MOV_DST(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
     inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst

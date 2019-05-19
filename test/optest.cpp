@@ -438,6 +438,28 @@ BOOST_AUTO_TEST_CASE( other_tests) {
        if (!passed)
             BOOST_ERROR("0xEB XCHG failure");
     }
+    { // XTHL 0xE3
+        state.clearAll();
+        memory[0] = 0xE3;
+        state.stackPointer = 0x10AD;
+        state.h = 0x0B;
+        state.l = 0x3C;
+        memory[0x10AD] = 0xF0;
+        memory[0x10AE] = 0x0D;
+        dis.runCycle(state);
+        bool passed = memory[0x10AD] == 0x3C && memory[0x10AE] == 0x0B && state.h == 0x0D && state.l == 0xF0;
+        if (!passed)
+            BOOST_ERROR("0xE3 XTHL failure");
+    }
+    { // SPHL 0xF9
+        state.clearAll();
+        state.h = 0x50;
+        state.l = 0x6C;
+        memory[0] = 0xF9;
+        dis.runCycle(state);
+        if (state.stackPointer != 0x506C)
+            BOOST_ERROR("0xF9 SPHL failure");
+    }
     {// OP CPI D8 0xfe
         state.clearAll();
         state.condFlags.zero = state.condFlags.carry = state.condFlags.sign = state.condFlags.parity = 1;
