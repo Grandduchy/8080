@@ -145,6 +145,36 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
         if (!passed)
             BOOST_ERROR("0x0f OP_RRC failure a=" + std::to_string(state.a));
     }
+    { // OP RLC 0x07
+        state.clearAll();
+        memory[0] = 0x07;
+        state.a = 0xF2;
+        state.condFlags.carry = 0;
+        dis.runCycle(state);
+        bool passed = state.a == 0xE5 && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("OP RLC 0x07 failure");
+    }
+    { // OP RAL 0x17
+        state.clearAll();
+        state.condFlags.carry = 0;
+        state.a = 0xB5;
+        memory[0] = 0x17;
+        dis.runCycle(state);
+        bool passed = state.a == 0x6A && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("OP RAL 0x17 failure");
+    }
+    { // OP RAR 0x1F
+        state.clearAll();
+        state.a = 0x6A;
+        memory[0] = 0x1F;
+        state.condFlags.carry = 1;
+        dis.runCycle(state);
+        bool passed = state.a == 0xB5 && state.condFlags.carry == 0;
+        if (!passed)
+            BOOST_ERROR("OP RAR 0x1F failure");
+    }
     {// OP_ANAA 0xA7
         state.clearAll();
         memory[0] = 0xA7;
