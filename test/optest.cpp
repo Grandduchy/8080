@@ -1,6 +1,6 @@
 #include "tester.h"
 
-#ifdef OP_TEST
+#ifdef OPTEST
 #define BOOST_TEST_MODULE opcode_test
 #include <boost/test/included/unit_test.hpp>
 #include "State8080.hpp"
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         memory[1]= 0x25;
         memory[2] = 0xAF;
         dis.runCycle(state);
-        bool passed = state.stackPointer == 0x25AF;
+        bool passed = state.stackPointer == 0xAF25;
         if (!passed)
             BOOST_ERROR("0x31 LXI SP failure");
     }
@@ -129,6 +129,23 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (state.a != 0x0A)
             BOOST_ERROR("0xE6 ANI D8 failure");
     }
+    { // OP SBI D8 0xDE, also acts as SUI instruction where carry = 0
+        state.clearAll();
+        memory[0] = 0xDE;
+        memory[1] = 0x1;
+        state.condFlags.carry = 0;
+        dis.runCycle(state);
+        bool passed = state.a == 0xFF && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_FAIL("SUI/SBI failure, next test did not run.");
+        state.programCounter = 0;
+        state.a = 0;
+        dis.runCycle(state);
+        passed = state.a == 0xFE && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("SBI failure");
+
+    }
 }
 
 BOOST_AUTO_TEST_CASE( logical_tests) {
@@ -145,6 +162,36 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
         if (!passed)
             BOOST_ERROR("0x0f OP_RRC failure a=" + std::to_string(state.a));
     }
+    { // OP RLC 0x07
+        state.clearAll();
+        memory[0] = 0x07;
+        state.a = 0xF2;
+        state.condFlags.carry = 0;
+        dis.runCycle(state);
+        bool passed = state.a == 0xE5 && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("OP RLC 0x07 failure");
+    }
+    { // OP RAL 0x17
+        state.clearAll();
+        state.condFlags.carry = 0;
+        state.a = 0xB5;
+        memory[0] = 0x17;
+        dis.runCycle(state);
+        bool passed = state.a == 0x6A && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("OP RAL 0x17 failure");
+    }
+    { // OP RAR 0x1F
+        state.clearAll();
+        state.a = 0x6A;
+        memory[0] = 0x1F;
+        state.condFlags.carry = 1;
+        dis.runCycle(state);
+        bool passed = state.a == 0xB5 && state.condFlags.carry == 0;
+        if (!passed)
+            BOOST_ERROR("OP RAR 0x1F failure");
+    }
     {// OP_ANAA 0xA7
         state.clearAll();
         memory[0] = 0xA7;
@@ -160,6 +207,76 @@ BOOST_AUTO_TEST_CASE( logical_tests) {
         dis.runCycle(state);
         if (state.a != 0 && state.condFlags.carry != 0)
             BOOST_ERROR("0xAF OP XRA A failure");
+    }
+    {// OP _ADD D test
+        state.clearAll();
+        memory[0] = 0x82;
+        state.d = 0x2E;
+        state.a = 0x6C;
+        dis.runCycle(state);
+        bool passed = state.a == 0x9a && state.condFlags.zero == 0 && state.condFlags.carry == 0 &&
+                state.condFlags.parity == 1 && state.condFlags.sign == 1 && state.condFlags.auxCarry == 1;
+        if (!passed)
+            BOOST_ERROR("ADD failure");
+        memory[1] = 0x87;
+        state.a = 0x2E;
+        dis.runCycle(state);
+        if (state.a != 2 * 0x2E)
+            BOOST_ERROR("ADD failure of doubling");
+    }
+    { // OP ADC C test
+        state.clearAll();
+        state.condFlags.carry = 0;
+        state.a = 0x42;
+        state.c = 0x3D;
+        memory[0] = memory[1] = 0x89;
+
+        dis.runCycle(state);
+        bool passed = state.a == 0x7F && state.condFlags.carry == 0 && state.condFlags.sign == 0 &&
+                state.condFlags.zero == 0 && state.condFlags.parity == 0 && state.condFlags.auxCarry == 0;
+        if (!passed)
+            BOOST_ERROR("ADC C failure");
+        state.a = 0x42;
+        state.condFlags.carry = 1;
+        dis.runCycle(state);
+        passed = state.a == 0x80 && state.condFlags.carry == 0 && state.condFlags.sign == 1 &&
+                state.condFlags.zero == 0 && state.condFlags.parity == 0 && state.condFlags.auxCarry == 1;
+        if (!passed)
+            BOOST_ERROR("next ADC C failure");
+    }
+    { // OP SUB A
+        state.clearAll();
+        state.a = 0x3E;
+        memory[0] = 0x97;
+        dis.runCycle(state);
+        bool passed = state.a == 0 && state.condFlags.carry == 0 && state.condFlags.auxCarry == 1 &&
+                state.condFlags.parity == 1 && state.condFlags.zero == 1 && state.condFlags.sign == 0;
+        if (!passed)
+            BOOST_ERROR("SUB A failure");
+    }
+    { // OP SBB L
+        state.clearAll();
+        state.l = 0x2;
+        state.a = 0x4;
+        state.condFlags.carry = 1;
+        memory[0] = 0x9D;
+        dis.runCycle(state);
+        bool passed = state.a == 0x01 && state.condFlags.carry == 0 && state.condFlags.zero == 0 && state.condFlags.carry == 0 &&
+                state.condFlags.auxCarry == 1 && state.condFlags.parity == 0 && state.condFlags.sign == 0;
+        if (!passed)
+            BOOST_ERROR("SBB L failure");
+    }
+    { // OP CMP E
+        state.clearAll();
+        state.condFlags.zero = state.condFlags.carry = 1;
+        state.a = 0x0a;
+        state.e = 0x05;
+        memory[0] = 0xBB;
+        dis.runCycle(state);
+        bool passed = state.a == 0x0a && state.e == 0x05 &&
+                state.condFlags.zero == 0 && state.condFlags.carry == 0;
+        if (!passed)
+            BOOST_ERROR("CMP E failure");
 
     }
 
@@ -302,6 +419,30 @@ BOOST_AUTO_TEST_CASE( other_tests) {
             BOOST_ERROR("0xA2 OP LDA ADR failure");
 
     }
+    { // OP SHLD 0x22
+        state.clearAll();
+        memory[0] = 0x22;
+        memory[1] = 0x0A; // memory @ 0x010A
+        memory[2] = 0x01;
+        state.h = 0xAE;
+        state.l = 0x29;
+        dis.runCycle(state);
+        bool passed = memory[0x010A] == 0x29 && memory[0x010B] == 0xAE;
+        if (!passed)
+            BOOST_ERROR("0x22 SHLD failure");
+    }
+    { // OP LHLD 0x2A
+        state.clearAll();
+        memory[0] = 0x2A;
+        memory[1] = 0x5B; // memory @ 0x025B
+        memory[2] = 0x02;
+        memory[0x025B] = 0xFF;
+        memory[0x025C] = 0x03;
+        dis.runCycle(state);
+        bool passed = state.l == 0xFF && state.h == 0x03;
+        if (!passed)
+            BOOST_ERROR("0x2A LHLD failure");
+    }
     { // MOV tests
         state.clearAll();
         // test special 0x77
@@ -337,6 +478,28 @@ BOOST_AUTO_TEST_CASE( other_tests) {
        bool passed = state.d == 0 && state.e == 0xFF && state.h == 0x33 && state.l == 0x55;
        if (!passed)
             BOOST_ERROR("0xEB XCHG failure");
+    }
+    { // XTHL 0xE3
+        state.clearAll();
+        memory[0] = 0xE3;
+        state.stackPointer = 0x10AD;
+        state.h = 0x0B;
+        state.l = 0x3C;
+        memory[0x10AD] = 0xF0;
+        memory[0x10AE] = 0x0D;
+        dis.runCycle(state);
+        bool passed = memory[0x10AD] == 0x3C && memory[0x10AE] == 0x0B && state.h == 0x0D && state.l == 0xF0;
+        if (!passed)
+            BOOST_ERROR("0xE3 XTHL failure");
+    }
+    { // SPHL 0xF9
+        state.clearAll();
+        state.h = 0x50;
+        state.l = 0x6C;
+        memory[0] = 0xF9;
+        dis.runCycle(state);
+        if (state.stackPointer != 0x506C)
+            BOOST_ERROR("0xF9 SPHL failure");
     }
     {// OP CPI D8 0xfe
         state.clearAll();

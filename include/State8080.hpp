@@ -23,8 +23,8 @@ struct State8080 {
     static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
     ConditionFlags condFlags;
-    bool allowInterrupt;
-
+    bool allowInterrupt = false;
+    bool halted = false;
     void clearMemory();
     void clearRegisters();
     void clearSpecial();
