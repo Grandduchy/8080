@@ -75,11 +75,7 @@ private:
 
 
     /// Jump instructions
-    void OP_JNZ(State8080&); // 0xc2
-    void OP_JMP(State8080&); // 0xc3
-    void OP_JZ(State8080&); // 0xCA
-    void OP_JC(State8080&); //0xDA
-
+    void OP_JUMP(State8080&);
 
     /// Call subroutine instructions
     void OP_CALL(State8080&); // 0xcd
@@ -192,6 +188,7 @@ private:
     inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst
     inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
+    inline void JUMP(State8080&, bool canJump) const noexcept;
 
     inline void ADD(State8080&, const uint8_t& reg);
     inline void ADC(State8080&, const uint8_t& reg);

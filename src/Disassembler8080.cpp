@@ -50,12 +50,13 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x22] = &Disassembler8080::OP_SHLD;
     opcodeTable[0x2A] = &Disassembler8080::OP_LHLD;
 
-
     /// Jump instructions
-    opcodeTable[0xC2] = &Disassembler8080::OP_JNZ;
-    opcodeTable[0xC3] = &Disassembler8080::OP_JMP;
-    opcodeTable[0xCA] = &Disassembler8080::OP_JZ;
-    opcodeTable[0xDA] = &Disassembler8080::OP_JC;
+    for (std::size_t i = 0xC2; i != 0xFA + 8; i+= 8) {
+        opcodeTable[i] = &Disassembler8080::OP_JUMP;
+    }
+    opcodeTable[0xC3] = &Disassembler8080::OP_JUMP;
+    opcodeTable[0xCB] = &Disassembler8080::OP_JUMP;
+
 
     /// Call subroutine instructions
     opcodeTable[0xCD] = &Disassembler8080::OP_CALL;
@@ -632,34 +633,36 @@ void Disassembler8080::OP_LHLD(State8080& state){
 
 //////// JUMP INSTRUCTIONS
 
-
-// jump to the address if the zero bit is zero
-void Disassembler8080::OP_JNZ(State8080& state) {
-    if (state.condFlags.zero == 0)
-        OP_JMP(state);
-    else // jump is not taken
-        state.programCounter += 2;
+void Disassembler8080::OP_JUMP(State8080& state) {
+    uint8_t opcode = state.memory[state.programCounter];
+    switch(opcode) {
+        case 0xC3: // JMP
+        case 0xCB: JUMP(state, true); break;
+        case 0xDA: JUMP(state, state.condFlags.carry == 1); break; // JC
+        case 0xD2: JUMP(state, state.condFlags.carry == 0); break; // JNC
+        case 0xCA: JUMP(state, state.condFlags.zero == 1); break; // JZ
+        case 0xC2: JUMP(state, state.condFlags.zero == 0); break; // JNZ
+        case 0xFA: JUMP(state, state.condFlags.sign == 1); break; // JM
+        case 0xF2: JUMP(state, state.condFlags.sign == 0); break; // JP
+        case 0xEA: JUMP(state, state.condFlags.parity == 1); break; //JPE
+        case 0xE2: JUMP(state, state.condFlags.parity == 0); break; // JPO
+        default:
+            throw std::runtime_error("opcode doesn't have a jump command opcode (dec) : " + std::to_string(static_cast<int>(opcode)) );
+    }
 }
 
-// jump to address
-void Disassembler8080::OP_JMP(State8080& state) {
-    uint8_t lowAdd = state.memory[state.programCounter + 1];
-    uint8_t hiAdd = state.memory[state.programCounter + 2];
-    uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
-    state.programCounter = addr;
-    --state.programCounter; // program counter will automatically be incremented, so do the inverse
-}
-void Disassembler8080::OP_JZ(State8080& state) {
-    if (state.condFlags.zero == 1)
-        OP_JMP(state);
-    else
+
+inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcept {
+    if (canJump) {
+        uint8_t lowAdd = state.memory[state.programCounter + 1];
+        uint8_t hiAdd = state.memory[state.programCounter + 2];
+        uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
+        state.programCounter = addr;
+        --state.programCounter; // program counter will automatically be incremented, so do the inverse
+    }
+    else { // jump is not taken
         state.programCounter += 2;
-}
-void Disassembler8080::OP_JC(State8080& state) {
-    if (state.condFlags.carry == 1)
-        OP_JMP(state);
-    else
-        state.programCounter += 2;
+    }
 }
 
 
