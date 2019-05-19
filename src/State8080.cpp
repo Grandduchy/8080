@@ -63,7 +63,7 @@ State8080 stateFromFile(const std::string& fname, const uint16_t& offset = 0){
 
     // make sure atleast some data was read, doesn't check the integrity of the file itself.
     if (std::accumulate(state.memory.cbegin() + offset, state.memory.cend(), 0) != 0){
-        std::cout << "Successful write into memory" << std::endl;
+        ;
     }
     else {
         std::cout << "Failed write into memory" << std::endl;
