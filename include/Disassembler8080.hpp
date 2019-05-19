@@ -41,17 +41,29 @@ private:
 
 
     /// Immediate Instructions
-    void OP_LXIB_D16(State8080&); // 0x01
+       //MVI
     void OP_MVIB_D8(State8080&); // 0x06
     void OP_MVIC_D8(State8080&); // 0x0e
-    void OP_LXID_D16(State8080&); // 0x11
-    void OP_LXIH_D16(State8080&); // 0x21
+    void OP_MVID_D8(State8080&); // 0x16
+    void OP_MVIE_D8(State8080&); // 0x1E
     void OP_MVIH_D8(State8080&); // 0x26
-    void OP_LXISP_D16(State8080&); // 0x31
+    void OP_MVIL_D8(State8080&); // 0x2E
     void OP_MVIM_D8(State8080&); // 0x36
     void OP_MVIA_D8(State8080&); // 0x3e
-    void OP_ADID8(State8080&); // 0xc6
-    void OP_ANID8(State8080&); // 0xe6
+
+    void OP_LXIB_D16(State8080&); // 0x01
+    void OP_LXID_D16(State8080&); // 0x11
+    void OP_LXIH_D16(State8080&); // 0x21
+    void OP_LXISP_D16(State8080&); // 0x31
+
+
+    void OP_ADI_D8(State8080&); // 0xc6
+    void OP_ACI_D8(State8080&); // 0xCE
+    void OP_SUI_D8(State8080&); // 0xD6
+    void OP_SBI_D8(State8080&); // 0xDE
+    void OP_ANI_D8(State8080&); // 0xe6
+    void OP_XRI_D8(State8080&); // 0xEE
+    void OP_ORI_D8(State8080&); // 0xF6
     void OP_CPI_D8(State8080&); // 0xfe
 
 

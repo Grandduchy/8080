@@ -129,6 +129,23 @@ BOOST_AUTO_TEST_CASE( arithmetric_tests ) {
         if (state.a != 0x0A)
             BOOST_ERROR("0xE6 ANI D8 failure");
     }
+    { // OP SBI D8 0xDE, also acts as SUI instruction where carry = 0
+        state.clearAll();
+        memory[0] = 0xDE;
+        memory[1] = 0x1;
+        state.condFlags.carry = 0;
+        dis.runCycle(state);
+        bool passed = state.a == 0xFF && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_FAIL("SUI/SBI failure, next test did not run.");
+        state.programCounter = 0;
+        state.a = 0;
+        dis.runCycle(state);
+        passed = state.a == 0xFE && state.condFlags.carry == 1;
+        if (!passed)
+            BOOST_ERROR("SBI failure");
+
+    }
 }
 
 BOOST_AUTO_TEST_CASE( logical_tests) {

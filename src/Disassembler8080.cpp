@@ -19,17 +19,27 @@ Disassembler8080::Disassembler8080() {
 
 
     /// Immediate Instructions
-    opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
     opcodeTable[0x06] = &Disassembler8080::OP_MVIB_D8;
     opcodeTable[0x0e] = &Disassembler8080::OP_MVIC_D8;
-    opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
-    opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
+    opcodeTable[0x16] = &Disassembler8080::OP_MVID_D8;
+    opcodeTable[0x1E] = &Disassembler8080::OP_MVIE_D8;
     opcodeTable[0x26] = &Disassembler8080::OP_MVIH_D8;
-    opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
+    opcodeTable[0x2E] = &Disassembler8080::OP_MVIL_D8;
     opcodeTable[0x36] = &Disassembler8080::OP_MVIM_D8;
     opcodeTable[0x3E] = &Disassembler8080::OP_MVIA_D8;
-    opcodeTable[0xC6] = &Disassembler8080::OP_ADID8;
-    opcodeTable[0xE6] = &Disassembler8080::OP_ANID8;
+
+    opcodeTable[0x21] = &Disassembler8080::OP_LXIH_D16;
+    opcodeTable[0x01] = &Disassembler8080::OP_LXIB_D16;
+    opcodeTable[0x11] = &Disassembler8080::OP_LXID_D16;
+    opcodeTable[0x31] = &Disassembler8080::OP_LXISP_D16;
+
+    opcodeTable[0xC6] = &Disassembler8080::OP_ADI_D8;
+    opcodeTable[0xCE] = &Disassembler8080::OP_ACI_D8;
+    opcodeTable[0xD6] = &Disassembler8080::OP_SUI_D8;
+    opcodeTable[0xDE] = &Disassembler8080::OP_SBI_D8;
+    opcodeTable[0xE6] = &Disassembler8080::OP_ANI_D8;
+    opcodeTable[0xEE] = &Disassembler8080::OP_XRI_D8;
+    opcodeTable[0xF6] = &Disassembler8080::OP_ORI_D8;
     opcodeTable[0xFE] = &Disassembler8080::OP_CPI_D8;
 
 
@@ -434,25 +444,20 @@ void Disassembler8080::OP_MVIC_D8(State8080& state) {
     MVI_D8(state, state.c);
 }
 
-void Disassembler8080::OP_LXID_D16(State8080& state) {
-    LXI_D16(state, state.d, state.e);
+void Disassembler8080::OP_MVID_D8(State8080& state) {
+    MVI_D8(state, state.d);
 }
 
-void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
-    LXI_D16(state, state.h, state.l);
+void Disassembler8080::OP_MVIE_D8(State8080& state) {
+    MVI_D8(state, state.e);
 }
 
 void Disassembler8080::OP_MVIH_D8(State8080& state) {
     MVI_D8(state, state.h);
 }
 
-void Disassembler8080::OP_LXISP_D16(State8080& state) {
-    // the function won't work for this.
-    uint8_t byte1 = state.memory[state.programCounter + 1];
-    uint8_t byte2 = state.memory[state.programCounter + 2];
-    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte2) << 8) | byte1);
-    state.stackPointer = address;
-    state.programCounter += 2;
+void Disassembler8080::OP_MVIL_D8(State8080& state) {
+    MVI_D8(state, state.l);
 }
 
 void Disassembler8080::OP_MVIM_D8(State8080& state) {
@@ -466,19 +471,78 @@ void Disassembler8080::OP_MVIA_D8(State8080& state) {
     MVI_D8(state, state.a);
 }
 
-// set accumulator to next byte
-void Disassembler8080::OP_ADID8(State8080& state) {
+void Disassembler8080::OP_LXID_D16(State8080& state) {
+    LXI_D16(state, state.d, state.e);
+}
+
+void Disassembler8080::OP_LXIH_D16(State8080& state) { // 0x21
+    LXI_D16(state, state.h, state.l);
+}
+
+void Disassembler8080::OP_LXISP_D16(State8080& state) {
+    // the function won't work for this.
+    uint8_t byte1 = state.memory[state.programCounter + 1];
+    uint8_t byte2 = state.memory[state.programCounter + 2];
+    uint16_t address = static_cast<uint16_t>( (static_cast<uint16_t>(byte2) << 8) | byte1);
+    state.stackPointer = address;
+    state.programCounter += 2;
+}
+
+// Adds the next byte to the accumulator
+void Disassembler8080::OP_ADI_D8(State8080& state) {
     uint16_t sum = state.a + state.memory[state.programCounter + 1];
     setZero(state, sum);
     setParity(state, sum & 0xFF);
     setSign(state, sum);
     setCarry(state, sum, 0xFF);
-    setAux16(state, sum);
+    setAux8(state, sum & 0xFF);
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
-// perform binary and with next byte with the accumulator
-void Disassembler8080::OP_ANID8(State8080& state) {
+
+// Adds the next byte to the accumulator, but with carry.
+void Disassembler8080::OP_ACI_D8(State8080& state) {
+    uint16_t sum = state.a + state.memory[state.programCounter + 1] + state.condFlags.carry;
+    setZero(state, sum);
+    setParity(state, sum & 0xFF);
+    setSign(state, sum);
+    setCarry(state, sum, 0xFF);
+    setAux8(state, sum & 0xFF);
+    state.a = 0xFF & sum;
+    ++state.programCounter;
+}
+
+// Subtract the next byte from the accumulator
+void Disassembler8080::OP_SUI_D8(State8080& state) {
+    // this is needed to know if there was a carry
+    uint8_t subByte = ~state.memory[state.programCounter + 1] + 1; // subtracted byte using two's complement
+    uint16_t sum = state.a + subByte;
+    setZero(state, sum);
+    setParity(state, sum & 0xFF);
+    setSign(state, sum);
+    // carry is inversed here, set to 1 if no carry
+    state.condFlags.carry = sum > 0xFF ? 0 : 1;
+    setAux8(state, sum & 0xFF);
+    state.a = sum & 0xFF;
+    ++state.programCounter;
+}
+
+// Subtract the next byte added with the carry bit from the accumulator
+void Disassembler8080::OP_SBI_D8(State8080& state) {
+    uint8_t subByte = ~(state.memory[state.programCounter + 1] + state.condFlags.carry) + 1; // subtracted byte using two's complement
+    uint16_t sum = state.a + subByte;
+    setZero(state, sum);
+    setParity(state, sum & 0xFF);
+    setSign(state, sum);
+    // carry is inversed here, set to 1 if no carry
+    state.condFlags.carry = sum > 0xFF ? 0 : 1;
+    setAux8(state, sum & 0xFF);
+    state.a = sum & 0xFF;
+    ++state.programCounter;
+}
+
+// perform binary AND with next byte with the accumulator
+void Disassembler8080::OP_ANI_D8(State8080& state) {
     state.a &= state.memory[state.programCounter + 1];
     state.condFlags.carry = 0;
     setParity(state, state.a);
@@ -486,6 +550,27 @@ void Disassembler8080::OP_ANID8(State8080& state) {
     setSign(state, state.a);
     ++state.programCounter;
 }
+
+// Perform binary XOR with next byte with the accumulator
+void Disassembler8080::OP_XRI_D8(State8080& state) {
+    state.a ^= state.memory[state.programCounter + 1];
+    state.condFlags.carry = 0;
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
+    ++state.programCounter;
+}
+
+// Perform binary OR with next byte with the accumulator
+void Disassembler8080::OP_ORI_D8(State8080& state) {
+    state.a  |= state.memory[state.programCounter + 1];
+    state.condFlags.carry = 0;
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
+    ++state.programCounter;
+}
+
 
 // compare next byte with accumulator by subtracting, note that nothing is set.
 void Disassembler8080::OP_CPI_D8(State8080& state) {
@@ -495,7 +580,7 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
     setParity(state, sum & 0xFF);
     setSign(state, sum);
     state.condFlags.carry = sum > byte;
-    setAux16(state, sum);
+    setAux8(state, sum & 0xFF);
     ++state.programCounter;
 }
 
