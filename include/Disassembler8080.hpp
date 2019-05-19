@@ -170,8 +170,9 @@ private:
     void OP_XTHL(State8080&); // 0xE3
     void OP_XCHG(State8080&); // 0xeb
     void OP_SPHL(State8080&); // 0xF9
-    // Halt Instruction
 
+    /// Halt Instruction
+    void OP_HLT(State8080&); // 0x76
 
 
     // functions that perform an opcode's operation using the registers themselves.

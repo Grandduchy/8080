@@ -178,7 +178,7 @@ Disassembler8080::Disassembler8080() {
 
 
     // Halt Instruction
-
+    opcodeTable[0x76] = &Disassembler8080::OP_HLT;
 }
 
 
@@ -1129,4 +1129,15 @@ void Disassembler8080::OP_XTHL(State8080& state) {
 void Disassembler8080::OP_SPHL(State8080& state) {
     uint16_t HL = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
     state.stackPointer = HL;
+}
+
+
+
+///////// HALT INSTRUCTION
+
+
+
+void Disassembler8080::OP_HLT(State8080& state) {
+    state.halted = true;
+    state.allowInterrupt = true; // While this is undocumented it makes sense, otherwise it would be stuck forever
 }
