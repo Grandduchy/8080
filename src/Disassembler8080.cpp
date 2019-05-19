@@ -51,6 +51,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x2A] = &Disassembler8080::OP_LHLD;
 
     /// Jump instructions
+    // most jump instructions start at 0xC2 and are displaced by 8
     for (std::size_t i = 0xC2; i != 0xFA + 8; i+= 8) {
         opcodeTable[i] = &Disassembler8080::OP_JUMP;
     }
@@ -59,7 +60,14 @@ Disassembler8080::Disassembler8080() {
 
 
     /// Call subroutine instructions
-    opcodeTable[0xCD] = &Disassembler8080::OP_CALL;
+    // call instructions start at 0xC4 and displaced by 8
+    for (std::size_t i = 0xC4; i != 0xFC + 8; i+= 8) {
+        opcodeTable[i] = &Disassembler8080::OP_CALL;
+    }
+    // some other instructions at 0xCD and displaced by 16
+    for (std::size_t i = 0xCD; i != 0xFD + 16; i += 16){
+        opcodeTable[i] = &Disassembler8080::OP_CALL;
+    }
 
     /// Return from subroutine instructions
     opcodeTable[0xC8] = &Disassembler8080::OP_RZ;
@@ -395,6 +403,35 @@ inline void Disassembler8080::CMP(State8080& state, const uint8_t& reg) {
 }
 
 
+inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcept {
+    if (canJump) {
+        uint8_t lowAdd = state.memory[state.programCounter + 1];
+        uint8_t hiAdd = state.memory[state.programCounter + 2];
+        uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
+        state.programCounter = addr;
+        --state.programCounter; // program counter will automatically be incremented, so do the inverse
+    }
+    else { // jump is not taken
+        state.programCounter += 2;
+    }
+}
+
+// call a subroutine
+inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
+    if (canJump) {
+        uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
+        // store the old address to the stack, it's pushed onto the stack
+        uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
+        state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+        state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+        state.stackPointer -= 2;
+        state.programCounter = newAddress;
+        --state.programCounter; // inverse the increment of the program counter
+    }
+    else {
+       state.programCounter += 2;
+    }
+ }
 
 /********************/
 // Opcode functions //
@@ -633,6 +670,8 @@ void Disassembler8080::OP_LHLD(State8080& state){
 
 //////// JUMP INSTRUCTIONS
 
+// Jump instructions are all in a jump table
+// A will only occur if the second parameter is true
 void Disassembler8080::OP_JUMP(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     switch(opcode) {
@@ -652,35 +691,27 @@ void Disassembler8080::OP_JUMP(State8080& state) {
 }
 
 
-inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcept {
-    if (canJump) {
-        uint8_t lowAdd = state.memory[state.programCounter + 1];
-        uint8_t hiAdd = state.memory[state.programCounter + 2];
-        uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
-        state.programCounter = addr;
-        --state.programCounter; // program counter will automatically be incremented, so do the inverse
-    }
-    else { // jump is not taken
-        state.programCounter += 2;
-    }
-}
-
-
 //////// CALL SUBROUTINE INSTRUCTIONS
 
-
-// call a subroutine
-void Disassembler8080::OP_CALL(State8080& state) { // 0xcd
-    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
-    // store the old address to the stack, it's pushed onto the stack
-    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
-    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
-    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
-    state.stackPointer -= 2;
-    state.programCounter = newAddress;
-    --state.programCounter; // inverse the increment of the program counter
- }
-
+// Call instructions are all in a jump table
+// A will only occur if the second parameter is true
+void Disassembler8080::OP_CALL(State8080& state) {
+    uint8_t opcode = state.memory[state.programCounter];
+    switch(opcode) {
+        case 0xCD: case 0xDD: case 0xED: case 0xFD:
+            CALL(state, true); break; // CALL
+        case 0xDC: CALL(state, state.condFlags.carry == 1); break; // CC
+        case 0xD4: CALL(state, state.condFlags.carry == 0); break; // CNC
+        case 0xCC: CALL(state, state.condFlags.zero == 1); break; // CZ
+        case 0xC4: CALL(state, state.condFlags.zero == 0); break; //CNZ
+        case 0xFC: CALL(state, state.condFlags.sign == 1); break; // CM
+        case 0xF4: CALL(state, state.condFlags.sign == 0); break; // CP
+        case 0xEC: CALL(state, state.condFlags.parity == 1); break; // CPE
+        case 0xE4: CALL(state, state.condFlags.parity == 0); break; // CPO
+    default:
+        throw std::runtime_error("opcode doesn't have a call command opcode (dec) : " + std::to_string(static_cast<int>(opcode)) );
+    }
+}
 
 //////// RETURN FROM SUBROUTINE INSTRUCTIONS
 

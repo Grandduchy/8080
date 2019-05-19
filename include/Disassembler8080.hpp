@@ -77,6 +77,7 @@ private:
     /// Jump instructions
     void OP_JUMP(State8080&);
 
+
     /// Call subroutine instructions
     void OP_CALL(State8080&); // 0xcd
 
@@ -189,6 +190,7 @@ private:
     inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
     inline void JUMP(State8080&, bool canJump) const noexcept;
+    inline void CALL(State8080&, bool canJump) const noexcept;
 
     inline void ADD(State8080&, const uint8_t& reg);
     inline void ADC(State8080&, const uint8_t& reg);
