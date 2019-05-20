@@ -446,7 +446,7 @@ void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 
             }
             std::cout << "\n";
             std::cout << "------------\n";
-            //state.programCounter += 2; // skip to the next instruction
+            state.programCounter += 2; // skip to the next instruction
         }
         else if (state.c == 2) {
             std::cout << "print char subroutine called\n";
