@@ -8,6 +8,7 @@ SOURCES += \
         src/Disassembler8080.cpp \
         src/State8080.cpp \
         src/main.cpp \
+        test/cpudiagtest.cpp \
         test/manualtest.cpp \
         test/optest.cpp
 

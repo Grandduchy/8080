@@ -5,6 +5,7 @@
 #include <bitset>
 
 #include "Disassembler8080.hpp"
+#include "tester.h"
 
 #define EXECOPCODE(obj, ptr, state) ((obj).*(ptr))(state) // executes a pointer to a function member with the object
 
@@ -184,6 +185,9 @@ Disassembler8080::Disassembler8080() {
 
 void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
+    if (opcode == 5) {// DCR B that is not called intentinally
+        int j = 0;
+    }
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
     wasUnimplemented = opcodeFunc == &Disassembler8080::unimplemented;
@@ -419,6 +423,51 @@ inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcep
     }
 }
 
+#ifdef CPUDIAGTEST
+
+inline void jump(State8080& state) {
+    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
+    // store the old address to the stack, it's pushed onto the stack
+    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    state.programCounter = newAddress;
+    --state.programCounter; // inverse the increment of the program counter
+}
+
+void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
+    if (state.memory[state.programCounter] == 0xcd) {
+        if (5 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1])) {
+            uint16_t offset = static_cast<uint16_t>((static_cast<uint16_t>(state.d) << 8) | (state.e));
+            unsigned char* str = &state.memory[offset + 3];
+            while (*str != '$') {
+                std::cout << *str++;
+            }
+            std::cout << "\n";
+            std::cout << "------------\n";
+            //state.programCounter += 2; // skip to the next instruction
+        }
+        else if (state.c == 2) {
+            std::cout << "print char subroutine called\n";
+        }
+        else if (0 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]) ) {
+            std::cout << "Exit called \n" << std::flush;
+            std::abort();
+        }
+        else {
+            jump(state);
+        }
+    }
+    else if (canJump) {
+        jump(state);
+    }
+    else {
+       state.programCounter += 2;
+    }
+ }
+
+#else
 // call a subroutine
 inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
     if (canJump) {
@@ -436,6 +485,7 @@ inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcep
     }
  }
 
+#endif
 // return from a subroutine
 inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept {
     if (canRet) {
@@ -692,7 +742,7 @@ void Disassembler8080::OP_JUMP(State8080& state) {
         case 0xCB: JUMP(state, true); break;
         case 0xDA: JUMP(state, state.condFlags.carry == 1); break; // JC
         case 0xD2: JUMP(state, state.condFlags.carry == 0); break; // JNC
-        case 0xCA: JUMP(state, state.condFlags.zero == 1); break; // JZ
+        case 0xCA: JUMP(state, false); break; // JZ
         case 0xC2: JUMP(state, state.condFlags.zero == 0); break; // JNZ
         case 0xFA: JUMP(state, state.condFlags.sign == 1); break; // JM
         case 0xF2: JUMP(state, state.condFlags.sign == 0); break; // JP
