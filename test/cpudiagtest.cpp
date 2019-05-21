@@ -12,7 +12,7 @@
 
 [[noreturn]]
 int main() {
-    State8080 state = stateFromFile("../8080/rsc/cpudiag", 0x100);
+    State8080 state = stateFromFile("../8080/rsc/TST8080.COM", 0x100);
     // Fix the first instruction to jump to 0x100
     state.memory[0] = 0xc3;
     state.memory[1] = 0;
@@ -28,7 +28,7 @@ int main() {
 
     Disassembler8080 dis;
     // i == 12, i == 31 - 36
-    for (int i = 0; i != 15 ;i++) {
+    for (int i = 0; i != 1000 ;i++) {
         dis.runCycle(state);
     }
 }
