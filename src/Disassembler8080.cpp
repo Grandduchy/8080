@@ -438,24 +438,27 @@ inline void jump(State8080& state) {
 
 void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
     if (state.memory[state.programCounter] == 0xcd) {
+        // call to location 5 if the tests require BDOS to print
         if (5 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1])) {
-            uint16_t offset = static_cast<uint16_t>((static_cast<uint16_t>(state.d) << 8) | (state.e));
-            unsigned char* str = &state.memory[offset + 3];
-            while (*str != '$') {
-                std::cout << *str++;
+            // BDOS wants to print characters stored in memory @ DE, until the character $ in ASCII is found
+            // Character $ is 0x24 in hex
+            if (state.c == 9) {
+                uint16_t DE = static_cast<uint16_t>((static_cast<uint16_t>(state.d) << 8) | state.e);
+                for (uint16_t loc = DE; state.memory[loc] != 0x24; loc++) {
+                    std::cout << static_cast<char>(state.memory[loc]);
+                }
             }
-            std::cout << "\n";
-            //std::cout << "------------\n";
-            state.programCounter += 2; // skip to the next instruction
+            // BDOS wants to print a single character in register E
+            else if (state.c == 2) {
+                std::cout << static_cast<char>(state.e);
+            }
         }
-        else if (state.c == 2) {
-            std::cout << "print char subroutine called\n";
-        }
+        // A call to 0 indicates the test is finished
         else if (0 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]) ) {
             std::cout << "Exit called \n" << std::flush;
             std::abort();
         }
-        else {
+        else { // otherwise a legit call instruction
             jump(state);
         }
     }
