@@ -513,6 +513,23 @@ BOOST_AUTO_TEST_CASE( other_tests) {
             BOOST_ERROR("0xFE CPI D8 failure");
 
     }
+    {
+        state.clearAll();
+        state.a = 0x9B;
+        state.condFlags.auxCarry = state.condFlags.carry = 0;
+        memory[0] = memory[1] = 0x27;
+        dis.runCycle(state);
+        bool passed = state.condFlags.auxCarry == 1 && state.condFlags.carry == 0 &&
+                state.a == 0xA1;
+        if (!passed)
+            BOOST_ERROR("DAA fail test 1");
+        state.condFlags.auxCarry = state.condFlags.carry = 0;
+        dis.runCycle(state);
+        passed = state.condFlags.auxCarry == 1 && state.condFlags.carry == 1 &&
+                state.a == 1;
+        if (!passed)
+            BOOST_ERROR("DAA fail test 2");
+    }
 }
 
 #endif

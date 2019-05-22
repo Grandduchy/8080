@@ -791,20 +791,30 @@ void Disassembler8080::OP_CMA(State8080& state) {
 
 void Disassembler8080::OP_DAA(State8080& state) {
     // if the 4 least sig bits are > 9
+    uint8_t add = 0;
     if ((state.a & 0xF) > 9 || state.condFlags.auxCarry == 1) {
-        state.condFlags.auxCarry = (((state.a & 0xF) + 6) & 0xF0) != 0; // set if carry out of least 4
-        state.a += 6;
+        add += 6;
     }
     // if the 4 great sig bits are > 9
     if ((state.a & 0xF0) > 0x90 || state.condFlags.carry == 1) {
-        uint16_t sum = static_cast<uint16_t>(state.a) + 0x60;
-        state.a = sum & 0xFF;
-        setParity(state, state.a);
-        setZero(state, state.a);
-        setSign(state, state.a);
-        setCarry(state, sum, 0xFF);
-
+        add += 0x60;
     }
+    uint16_t sum = state.a + add;
+    uint16_t a = state.a & 0x0F;
+    uint16_t b = a + add;
+    uint16_t c = b >> 4;
+    if ((((state.a & 0x0F) + add) >> 4 ) == 0) // no carry occurs
+        state.condFlags.auxCarry = 0;
+    else
+        state.condFlags.auxCarry = 1;
+
+    state.a = sum & 0xFF;
+    setParity(state, state.a);
+    setZero(state, state.a);
+    setSign(state, state.a);
+    setCarry(state, sum, 0xFF);
+
+
 }
 
 void Disassembler8080::OP_INRB(State8080& state) { // 0x04
