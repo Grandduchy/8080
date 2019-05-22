@@ -185,9 +185,6 @@ Disassembler8080::Disassembler8080() {
 
 void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
-    if (opcode == 5) {// DCR B that is not called intentinally
-        int j = 0;
-    }
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
     wasUnimplemented = opcodeFunc == &Disassembler8080::unimplemented;
@@ -411,10 +408,13 @@ inline void Disassembler8080::CMP(State8080& state, const uint8_t& reg) {
 
 
 inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcept {
+    uint8_t lowAdd = state.memory[state.programCounter + 1];
+    uint8_t hiAdd = state.memory[state.programCounter + 2];
+    uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
+    if (addr == 0) {
+        //std::abort();
+    }
     if (canJump) {
-        uint8_t lowAdd = state.memory[state.programCounter + 1];
-        uint8_t hiAdd = state.memory[state.programCounter + 2];
-        uint16_t addr = static_cast<uint16_t>((static_cast<uint16_t>(hiAdd) << 8) | lowAdd);
         state.programCounter = addr;
         --state.programCounter; // program counter will automatically be incremented, so do the inverse
     }
@@ -471,7 +471,10 @@ void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 
     }
  }
 
+
+
 #else
+
 // call a subroutine
 inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
     if (canJump) {

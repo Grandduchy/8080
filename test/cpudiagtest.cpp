@@ -30,6 +30,10 @@ int main() {
     // i == 12, i == 31 - 36
     for (int i = 0; i != 1000 ;i++) {
         dis.runCycle(state);
+        if (state.programCounter == 0) {
+            std::cout << std::endl;
+            break;
+        }
     }
     return 0;
 }
