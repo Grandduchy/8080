@@ -423,58 +423,6 @@ inline void Disassembler8080::JUMP(State8080& state, bool canJump) const noexcep
     }
 }
 
-#ifdef CPUDIAGTEST
-
-inline void jump(State8080& state) {
-    uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
-    // store the old address to the stack, it's pushed onto the stack
-    uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
-    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
-    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
-    state.stackPointer -= 2;
-    state.programCounter = newAddress;
-    --state.programCounter; // inverse the increment of the program counter
-}
-
-void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
-    if (state.memory[state.programCounter] == 0xcd) {
-        // call to location 5 if the tests require BDOS to print
-        if (5 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1])) {
-            // BDOS wants to print characters stored in memory @ DE, until the character $ in ASCII is found
-            // Character $ is 0x24 in hex
-            if (state.c == 9) {
-                uint16_t DE = static_cast<uint16_t>((static_cast<uint16_t>(state.d) << 8) | state.e);
-                for (uint16_t loc = DE; state.memory[loc] != 0x24; loc++) {
-                    std::cout << static_cast<char>(state.memory[loc]);
-                }
-            }
-            // BDOS wants to print a single character in register E
-            else if (state.c == 2) {
-                std::cout << static_cast<char>(state.e);
-            }
-            state.programCounter += 2; // skip past the address
-        }
-        // A call to 0 indicates the test is finished
-        else if (0 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]) ) {
-            std::cout << "Exit called \n" << std::flush;
-            std::abort();
-        }
-        else { // otherwise a legit call instruction
-            jump(state);
-        }
-    }
-    else if (canJump) {
-        jump(state);
-    }
-    else {
-       state.programCounter += 2;
-    }
- }
-
-
-
-#else
-
 // call a subroutine
 inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 0xcd
     if (canJump) {
@@ -492,7 +440,6 @@ inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcep
     }
  }
 
-#endif
 // return from a subroutine
 inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept {
     if (canRet) {
