@@ -290,7 +290,7 @@ inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
 }
 
 // A register pair is decremented by one and stored into the pair, same as INX
-inline void Disassembler8080::DCX(uint8_t& regPair1, uint8_t regPair2) {
+inline void Disassembler8080::DCX(uint8_t& regPair1, uint8_t& regPair2) {
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     --pair;
     regPair1 = (pair & 0xFF00) >> 8;

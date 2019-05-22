@@ -182,7 +182,7 @@ private:
     inline void DAD(State8080&, uint8_t&, uint8_t&);
     inline void MVI_D8(State8080&, uint8_t&);
     inline void INX(uint8_t&, uint8_t&);
-    inline void DCX(uint8_t& regPair1, uint8_t regPair2);
+    inline void DCX(uint8_t& regPair1, uint8_t& regPair2);
     inline void MOV(uint8_t& dst, uint8_t& src);
     inline void MOV_DST(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
     inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst
