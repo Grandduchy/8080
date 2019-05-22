@@ -26,9 +26,15 @@ int main() {
     state.memory[0x59e] = 0x05;
     */
 
+    // AIMM tests at count 41
     Disassembler8080 dis;
-    // i == 12, i == 31 - 36
-    for (int count = 0; count != 1000; count++) {
+    uint16_t posErr = 0;
+    for (std::size_t count = 0; count != 1000; count++) {
+
+        // 6A0 is where CPUER subroutine is located and indicates an error happened
+        if (state.programCounter == 0x6A0) {
+            posErr = static_cast<uint16_t>(count) - 2;
+        }
 
         // call to location 5 if the tests require BDOS to print
         if (state.programCounter == 0x5) {
@@ -50,7 +56,7 @@ int main() {
 
         // call to location 0 if the test is done
         if (state.programCounter == 0) {
-            std::cout << "\nEnding at iteration (dec): " << std::dec << count << std::endl;
+            std::cout << "\nEnding at iteration (dec): " << std::dec << count << "\nPossible Error at (dec) : " << posErr << std::endl;
             break;
         }
     }
