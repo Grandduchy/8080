@@ -222,12 +222,7 @@ inline void Disassembler8080::setParity(State8080& state, const uint8_t& expr) c
     state.condFlags.parity = (std::bitset<8>(expr).count() & 0x1) != 1;
 #endif
 }
-inline void Disassembler8080::setAux8(State8080& state, const uint8_t& expr) const noexcept {
-    state.condFlags.auxCarry = (expr & 0xF) != 0xF;
-}
-inline void Disassembler8080::setAux16(State8080& state, const uint16_t& expr) const noexcept {
-    state.condFlags.auxCarry = (expr & 0xFF) != 0xFF;
-}
+
 
 /// ------------- Everything below this is to do with opcodes --------------------
 
@@ -247,7 +242,8 @@ inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
     setZero(state, reg);
     setSign(state, reg);
     setParity(state, reg);
-    setAux8(state, reg);
+    // aux set if least 4 bits are all 0, takes a bit from greatest 4
+    state.condFlags.auxCarry = (reg & 0xF) != 0xF;
 }
 
 // Increment a register
@@ -256,7 +252,7 @@ inline void Disassembler8080::INR(State8080& state, uint8_t& reg) {
     setZero(state, reg);
     setSign(state, reg);
     setParity(state, reg);
-    setAux8(state, reg);
+    state.condFlags.auxCarry = (reg & 0xF) == 0xF; // aux only set if least 4 bits are all 1s
 }
 
 
@@ -328,8 +324,9 @@ inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) {
     setSign(state, sum);
     setParity(state, sum & 0xFF);
     setZero(state, sum);
-    setAux8(state, sum & 0xFF);
     setCarry(state,sum, 0xFF);
+    // consider only the 4 bits and check if the upper 4 were modified
+    state.condFlags.auxCarry = ((state.a & 0xF) + reg + state.condFlags.carry) >> 4 != 0;
 }
 
 // Add a register to the accumulator
@@ -339,8 +336,8 @@ inline void Disassembler8080::ADD(State8080& state, const uint8_t& reg) {
     setSign(state, sum);
     setParity(state, sum & 0xFF);
     setZero(state, sum);
-    setAux8(state, sum & 0xFF);
     setCarry(state,sum, 0xFF);
+    state.condFlags.auxCarry = ((state.a & 0xF) + reg) >> 4 != 0;
 }
 
 // Subtract register from accumulator
@@ -353,7 +350,8 @@ inline void Disassembler8080::SUB(State8080& state, const uint8_t& reg) {
     setParity(state, state.a);
     setZero(state, state.a);
     setSign(state, state.a);
-    setAux8(state, state.a);
+    // from https://github.com/omerjerk/i8080-emu
+    state.condFlags.auxCarry = ((state.a & 0xF) + (-state.b & 0xF)) > 0xF;
 }
 
 // Subtract register from accumulator but with borrow
@@ -369,7 +367,7 @@ inline void Disassembler8080::XRA(State8080& state, const uint8_t& reg) {
     setParity(state, state.a);
     setZero(state, state.a);
     setSign(state, state.a);
-    setAux8(state, state.a);
+    state.condFlags.auxCarry = 0;
     state.condFlags.carry = 0;
 }
 
@@ -380,6 +378,7 @@ inline void Disassembler8080::ANA(State8080& state, const uint8_t& reg) {
     setZero(state, state.a);
     setSign(state, state.a);
     state.condFlags.carry = 0;
+    state.condFlags.auxCarry = ((state.a | reg) & 0x8) != 0;
 }
 
 // Binary OR the register with the accumulator
@@ -389,6 +388,7 @@ inline void Disassembler8080::ORA(State8080& state, const uint8_t& reg) {
     setZero(state, state.a);
     setSign(state, state.a);
     state.condFlags.carry = 0;
+    state.condFlags.auxCarry = 0;
 }
 
 // Subtract the register from the accumulator BUT do not modify the registers,
@@ -402,8 +402,7 @@ inline void Disassembler8080::CMP(State8080& state, const uint8_t& reg) {
     setParity(state, sum & 0xFF);
     setZero(state, sum);
     setSign(state, sum);
-    setAux8(state, sum & 0xFF);
-
+    state.condFlags.auxCarry = ~(state.a ^ sum ^ reg) & 0x10;
 }
 
 
@@ -552,7 +551,7 @@ void Disassembler8080::OP_ADI_D8(State8080& state) {
     setParity(state, sum & 0xFF);
     setSign(state, sum);
     setCarry(state, sum, 0xFF);
-    setAux8(state, sum & 0xFF);
+    state.condFlags.auxCarry = ((state.a & 0xF) + sum) >> 4 != 0;
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
@@ -564,11 +563,12 @@ void Disassembler8080::OP_ACI_D8(State8080& state) {
     setParity(state, sum & 0xFF);
     setSign(state, sum);
     setCarry(state, sum, 0xFF);
-    setAux8(state, sum & 0xFF);
+    state.condFlags.auxCarry = ((state.a & 0xF) + sum + state.condFlags.carry) >> 4 != 0;
     state.a = 0xFF & sum;
     ++state.programCounter;
 }
 
+// state.condFlags.auxCarry = ((state.a & 0xF) + (-state.b & 0xF)) > 0xF;
 // Subtract the next byte from the accumulator
 void Disassembler8080::OP_SUI_D8(State8080& state) {
     // this is needed to know if there was a carry
@@ -579,7 +579,7 @@ void Disassembler8080::OP_SUI_D8(State8080& state) {
     setSign(state, sum);
     // carry is inversed here, set to 1 if no carry
     state.condFlags.carry = sum > 0xFF ? 0 : 1;
-    setAux8(state, sum & 0xFF);
+    state.condFlags.auxCarry = ((state.a & 0xF) + (~state.memory[state.programCounter + 1] & 0xF)) > 0xF;
     state.a = sum & 0xFF;
     ++state.programCounter;
 }
@@ -593,13 +593,16 @@ void Disassembler8080::OP_SBI_D8(State8080& state) {
     setSign(state, sum);
     // carry is inversed here, set to 1 if no carry
     state.condFlags.carry = sum > 0xFF ? 0 : 1;
-    setAux8(state, sum & 0xFF);
+    state.condFlags.auxCarry =
+            ((state.a & 0xF) + (~(state.memory[state.programCounter + 1] + state.condFlags.carry) & 0xF)) > 0xF;
     state.a = sum & 0xFF;
     ++state.programCounter;
 }
 
 // perform binary AND with next byte with the accumulator
 void Disassembler8080::OP_ANI_D8(State8080& state) {
+    state.condFlags.auxCarry =
+            ((state.a | (state.a & state.memory[state.programCounter + 1])) & 0x8) != 0;
     state.a &= state.memory[state.programCounter + 1];
     state.condFlags.carry = 0;
     setParity(state, state.a);
@@ -612,6 +615,7 @@ void Disassembler8080::OP_ANI_D8(State8080& state) {
 void Disassembler8080::OP_XRI_D8(State8080& state) {
     state.a ^= state.memory[state.programCounter + 1];
     state.condFlags.carry = 0;
+    state.condFlags.auxCarry = 0;
     setParity(state, state.a);
     setZero(state, state.a);
     setSign(state, state.a);
@@ -622,6 +626,7 @@ void Disassembler8080::OP_XRI_D8(State8080& state) {
 void Disassembler8080::OP_ORI_D8(State8080& state) {
     state.a  |= state.memory[state.programCounter + 1];
     state.condFlags.carry = 0;
+    state.condFlags.auxCarry = 0;
     setParity(state, state.a);
     setZero(state, state.a);
     setSign(state, state.a);
@@ -633,11 +638,11 @@ void Disassembler8080::OP_ORI_D8(State8080& state) {
 void Disassembler8080::OP_CPI_D8(State8080& state) {
     uint8_t byte = state.memory[state.programCounter + 1];
     uint16_t sum = state.a - byte;
-    state.condFlags.zero = byte == state.a;
+    setZero(state, sum);
     setParity(state, sum & 0xFF);
     setSign(state, sum);
     state.condFlags.carry = sum > 0xFF; // technically wrong due to text indicating its inversed, but pasts the test
-    setAux8(state, sum & 0xFF);
+    state.condFlags.auxCarry = ~(state.a ^ sum ^ byte) & 0x10;
     ++state.programCounter;
 }
 
@@ -800,9 +805,6 @@ void Disassembler8080::OP_DAA(State8080& state) {
         add += 0x60;
     }
     uint16_t sum = state.a + add;
-    uint16_t a = state.a & 0x0F;
-    uint16_t b = a + add;
-    uint16_t c = b >> 4;
     if ((((state.a & 0x0F) + add) >> 4 ) == 0) // no carry occurs
         state.condFlags.auxCarry = 0;
     else
