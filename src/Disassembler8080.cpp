@@ -696,7 +696,7 @@ void Disassembler8080::OP_JUMP(State8080& state) {
         case 0xCB: JUMP(state, true); break;
         case 0xDA: JUMP(state, state.condFlags.carry == 1); break; // JC
         case 0xD2: JUMP(state, state.condFlags.carry == 0); break; // JNC
-        case 0xCA: JUMP(state, false); break; // JZ
+        case 0xCA: JUMP(state, state.condFlags.zero == 1); break; // JZ
         case 0xC2: JUMP(state, state.condFlags.zero == 0); break; // JNZ
         case 0xFA: JUMP(state, state.condFlags.sign == 1); break; // JM
         case 0xF2: JUMP(state, state.condFlags.sign == 0); break; // JP

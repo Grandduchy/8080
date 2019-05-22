@@ -50,7 +50,7 @@ int main() {
 
         // call to location 0 if the test is done
         if (state.programCounter == 0) {
-            std::cout << std::endl;
+            std::cout << "\nEnding at iteration (dec): " << std::dec << count << std::endl;
             break;
         }
     }
