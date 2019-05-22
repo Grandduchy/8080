@@ -452,6 +452,7 @@ void Disassembler8080::CALL(State8080& state, bool canJump) const noexcept { // 
             else if (state.c == 2) {
                 std::cout << static_cast<char>(state.e);
             }
+            state.programCounter += 2; // skip past the address
         }
         // A call to 0 indicates the test is finished
         else if (0 == ((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]) ) {
