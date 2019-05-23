@@ -11,7 +11,15 @@
 #include "State8080.hpp"
 
 void runTest(const std::string& filename) {
+
     State8080 state = stateFromFile(filename, 0x100);
+
+    std::string prefix = "8080PRE.COM";
+    std::string ending(filename.end() - prefix.size(), filename.end());
+    // 8080pre test will fail regardless of correctness if the stack pointer is not set
+    if (prefix == ending)
+        state.stackPointer = 0xFFF5;
+
 
     // Set PC to start where ROM starts
     state.programCounter = 0x100;
@@ -43,6 +51,7 @@ void runTest(const std::string& filename) {
 
         // call to location 0 if the test is done
         if (state.programCounter == 0) {
+            std::cout << "End at count : " << count << "\n";
             std::cout << std::endl;
             break;
         }
@@ -51,7 +60,8 @@ void runTest(const std::string& filename) {
 
 
 int main() {
-    runTest("../8080/rsc/TST8080.COM");
+    //runTest("../8080/rsc/TST8080.COM");
+    runTest("../8080/rsc/8080PRE.COM");
     return 0;
 }
 

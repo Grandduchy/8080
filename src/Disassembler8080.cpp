@@ -428,7 +428,7 @@ inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcep
     if (canJump) {
         uint16_t newAddress = static_cast<uint16_t>((state.memory[state.programCounter + 2] << 8) | state.memory[state.programCounter + 1]);
         // store the old address to the stack, it's pushed onto the stack
-        uint16_t returnAddress = state.programCounter + 2; // skip to the next instruction after this one
+        uint16_t returnAddress = state.programCounter + 3; // skip to the next instruction after this one
         state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
         state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
         state.stackPointer -= 2;
@@ -446,6 +446,7 @@ inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept 
         // pop the old address from the stack
         state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
         state.stackPointer += 2;
+        --state.programCounter;
         // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
     }
 }
