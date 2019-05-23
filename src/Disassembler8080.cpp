@@ -641,7 +641,7 @@ void Disassembler8080::OP_CPI_D8(State8080& state) {
     setZero(state, sum);
     setParity(state, sum & 0xFF);
     setSign(state, sum);
-    state.condFlags.carry = sum > 0xFF; // technically wrong due to text indicating its inversed, but pasts the test
+    setCarry(state, sum, 0xFF); // technically wrong due to text indicating its inversed, but pasts the test
     state.condFlags.auxCarry = ~(state.a ^ sum ^ byte) & 0x10;
     ++state.programCounter;
 }
@@ -795,8 +795,8 @@ void Disassembler8080::OP_CMA(State8080& state) {
 }
 
 void Disassembler8080::OP_DAA(State8080& state) {
-    // if the 4 least sig bits are > 9
     uint8_t add = 0;
+    // if the 4 least sig bits are > 9
     if ((state.a & 0xF) > 9 || state.condFlags.auxCarry == 1) {
         add += 6;
     }
@@ -805,17 +805,12 @@ void Disassembler8080::OP_DAA(State8080& state) {
         add += 0x60;
     }
     uint16_t sum = state.a + add;
-    if ((((state.a & 0x0F) + add) >> 4 ) == 0) // no carry occurs
-        state.condFlags.auxCarry = 0;
-    else
-        state.condFlags.auxCarry = 1;
-
+    state.condFlags.auxCarry = ((state.a & 0xF) + sum) >> 4 != 0;
     state.a = sum & 0xFF;
     setParity(state, state.a);
     setZero(state, state.a);
     setSign(state, state.a);
     setCarry(state, sum, 0xFF);
-
 
 }
 
