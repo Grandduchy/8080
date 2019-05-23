@@ -45,7 +45,7 @@ State8080 stateFromFile(const std::string& fname, const uint16_t& offset = 0){
 
     std::ifstream ifs(fname, std::ios_base::binary | std::ios_base::in | std::ios_base::ate);
     if (!ifs.good()) {
-        std::cerr << "Invaders file not found" << std::endl;
+        std::cerr << "File not found" << std::endl;
         throw std::runtime_error("File not found, given path:" + fname);
     }
 
