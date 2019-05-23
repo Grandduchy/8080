@@ -19,14 +19,8 @@ int main() {
 
     // Make 0x5 a RET to return back from a call to 0x5
     state.memory[0x5] = 0xC9;
-    /*
-    // skip DAA test (for now)
-    state.memory[0x59c] = 0xc3; // JMP
-    state.memory[0x59d] = 0xc2;
-    state.memory[0x59e] = 0x05;
-    */
 
-    // AIMM tests at count 41
+
     Disassembler8080 dis;
     uint16_t posErr = 0;
     for (std::size_t count = 0; count != 1000; count++) {
@@ -56,7 +50,9 @@ int main() {
 
         // call to location 0 if the test is done
         if (state.programCounter == 0) {
-            std::cout << "\nEnding at iteration (dec): " << std::dec << count << "\nPossible Error at (dec) : " << posErr << std::endl;
+            if (posErr != 0)
+                std::cout << "\nEnding at iteration (dec): " << std::dec << count << "\nPossible Error at (dec) : " << posErr;
+            std::cout << std::endl;
             break;
         }
     }
