@@ -796,12 +796,15 @@ void Disassembler8080::OP_CMA(State8080& state) {
 
 void Disassembler8080::OP_DAA(State8080& state) {
     uint8_t add = 0;
+    uint8_t leastBits = state.a & 0xF;
+    uint8_t greatestBits = (state.a & 0xF0) >> 4;
     // if the 4 least sig bits are > 9
-    if ((state.a & 0xF) > 9 || state.condFlags.auxCarry == 1) {
+    if (leastBits > 9 || state.condFlags.auxCarry == 1) {
         add += 6;
     }
     // if the 4 great sig bits are > 9
-    if ((state.a & 0xF0) > 0x90 || state.condFlags.carry == 1) {
+    if (greatestBits > 9 || state.condFlags.carry == 1 ||
+            (greatestBits >= 9 && leastBits > 9)) {
         add += 0x60;
     }
     uint16_t sum = state.a + add;
