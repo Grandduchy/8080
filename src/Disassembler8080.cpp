@@ -1106,6 +1106,7 @@ void Disassembler8080::OP_INXSP(State8080& state) {
     uint8_t upperSP = (state.stackPointer & 0xFF00) >> 8;
     uint8_t lowerSP = state.stackPointer & 0xFF;
     INX(upperSP, lowerSP);
+    state.stackPointer = static_cast<uint16_t>((static_cast<uint16_t>(upperSP) << 8) | lowerSP);
 }
 
 void Disassembler8080::OP_DCXB(State8080& state) {
@@ -1124,6 +1125,7 @@ void Disassembler8080::OP_DCXSP(State8080& state) {
     uint8_t upperSP = (state.stackPointer & 0xFF00) >> 8;
     uint8_t lowerSP = state.stackPointer & 0xFF;
     DCX(upperSP, lowerSP);
+    state.stackPointer = static_cast<uint16_t>((static_cast<uint16_t>(upperSP) << 8) | lowerSP);
 }
 
 // swap pairs h&l with d&e
