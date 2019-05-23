@@ -1,11 +1,9 @@
 #include "tester.h"
 
-#if defined(CPUDIAGTEST) && !defined(CPUDIAG)
-
-#define CPUDIAG
+#ifdef CPUDIAGTEST
 
 #include <iostream>
-#include <thread>
+#include <algorithm>
 
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
@@ -14,10 +12,13 @@ void runTest(const std::string& filename) {
 
     State8080 state = stateFromFile(filename, 0x100);
 
-    std::string prefix = "8080PRE.COM";
-    std::string ending(filename.end() - prefix.size(), filename.end());
+    auto slash = std::find(filename.rbegin(), filename.rend(), '/').base();
+    std::string file(slash, filename.end());
+
+    std::cout << "**** Test running " << file << "\n";
+
     // 8080pre test will fail regardless of correctness if the stack pointer is not set
-    if (prefix == ending)
+    if (file == "8080PRE.COM")
         state.stackPointer = 0xFFF5;
 
 
@@ -26,10 +27,8 @@ void runTest(const std::string& filename) {
 
     // Make 0x5 a RET to return back from a call to 0x5
     state.memory[0x5] = 0xC9;
-
-
     Disassembler8080 dis;
-    for (std::size_t count = 0; count != 1000; count++) {
+    for (std::size_t count = 0 ;; count++) {
 
         // call to location 5 if the tests require BDOS to print
         if (state.programCounter == 0x5) {
@@ -51,8 +50,7 @@ void runTest(const std::string& filename) {
 
         // call to location 0 if the test is done
         if (state.programCounter == 0) {
-            std::cout << "End at count : " << count << "\n";
-            std::cout << std::endl;
+            std::cout << "\n";
             break;
         }
     }
@@ -60,8 +58,10 @@ void runTest(const std::string& filename) {
 
 
 int main() {
-    //runTest("../8080/rsc/TST8080.COM");
     runTest("../8080/rsc/8080PRE.COM");
+    runTest("../8080/rsc/TST8080.COM");
+    std::cout << std::endl;
+
     return 0;
 }
 
