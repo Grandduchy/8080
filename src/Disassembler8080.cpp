@@ -52,6 +52,7 @@ Disassembler8080::Disassembler8080() {
     opcodeTable[0x2A] = &Disassembler8080::OP_LHLD;
 
     /// Jump instructions
+    opcodeTable[0xE9] = &Disassembler8080::OP_PCHL;
     // most jump instructions start at 0xC2 and are displaced by 8
     for (std::size_t i = 0xC2; i != 0xFA + 8; i+= 8) {
         opcodeTable[i] = &Disassembler8080::OP_JUMP;
@@ -691,6 +692,14 @@ void Disassembler8080::OP_LHLD(State8080& state){
 
 
 //////// JUMP INSTRUCTIONS
+
+// Load the program counter from H&L registers
+void Disassembler8080::OP_PCHL(State8080& state) {
+    uint16_t address = static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l);
+    state.programCounter = address;
+    --state.programCounter; // inverse the increment
+}
+
 
 // Jump instructions are all in a jump table
 // A will only occur if the second parameter is true

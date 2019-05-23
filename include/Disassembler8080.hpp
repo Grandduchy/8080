@@ -73,6 +73,7 @@ private:
 
 
     /// Jump instructions
+    void OP_PCHL(State8080&);
     void OP_JUMP(State8080&);
 
 
