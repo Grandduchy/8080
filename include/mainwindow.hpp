@@ -2,6 +2,9 @@
 #define MAINWINDOW_HPP
 
 #include <QMainWindow>
+#include "Disassembler8080.hpp"
+#include "State8080.hpp"
+
 
 namespace Ui {
 class MainWindow;
@@ -15,6 +18,11 @@ public:
 
 private:
     Ui::MainWindow * ui;
+
+    State8080 state;
+    Disassembler8080 cpu;
+
+    void loadFile(const QString& qtRscFile);
 };
 
 #endif // MAINWINDOW_HPP
