@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/rsc">
-        <file>src/invaders</file>
+        <file>rsc/invaders</file>
     </qresource>
 </RCC>
