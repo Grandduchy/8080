@@ -3,6 +3,7 @@
 #include <iostream>
 #include <numeric>
 #include <bitset>
+#include <algorithm>
 
 #include "Disassembler8080.hpp"
 #include "tester.h"
@@ -80,6 +81,10 @@ Disassembler8080::Disassembler8080() {
 
 
     /// RST instructions
+    for (std::size_t i = 0xC7; i != 0xFF + 8; i += 8) {
+        opcodeTable[i] = &Disassembler8080::OP_RST;
+    }
+
 
     /// Interrupt instructions
     opcodeTable[0xF3] = &Disassembler8080::OP_DI;
@@ -181,6 +186,18 @@ Disassembler8080::Disassembler8080() {
 
     // Halt Instruction
     opcodeTable[0x76] = &Disassembler8080::OP_HLT;
+
+    // At this point, all instructions should be implemented, if not tell the user
+    // to indicate of a possible error
+    std::cout << std::hex;
+    for (auto begin = opcodeTable.cbegin(); begin != opcodeTable.cend(); begin++) {
+        auto opcode = std::distance(opcodeTable.cbegin(), begin);
+        if (*begin == &Disassembler8080::unimplemented)
+            std::cout << opcode << ", is unimplemented\n";
+        else if (*begin == &Disassembler8080::todo)
+            std::cout << opcode << ", is todo\n";
+    }
+    std::cout << std::dec;
 }
 
 
@@ -769,8 +786,22 @@ void Disassembler8080::OP_RET(State8080& state) {
 
 
 //////// RST INSTRUCTIONS
+void Disassembler8080::OP_RST(State8080& state) {
+    uint8_t rstNum = (state.memory[state.programCounter] - 0xC7) / 8;
+    RST(state, rstNum);
 
+}
 
+inline void Disassembler8080::RST(State8080& state, const uint8_t& resLoc) {
+    uint16_t newAddress = 8 * resLoc;
+    uint16_t returnAddress = state.programCounter + 3; // skip to the next instruction after this one
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    state.programCounter = newAddress;
+    --state.programCounter; // inverse the increment of the program counter
+
+}
 
 ////// INTERRUPT INSTRUCTIONS
 

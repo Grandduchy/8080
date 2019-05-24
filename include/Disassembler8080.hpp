@@ -85,6 +85,8 @@ private:
     void OP_RET(State8080&);
 
     /// RST instructions
+    void OP_RST(State8080&);
+
 
     /// Interrupt instructions
     void OP_DI(State8080&); // 0xF3
@@ -190,6 +192,7 @@ private:
     inline void JUMP(State8080&, bool canJump) const noexcept;
     inline void CALL(State8080&, bool canJump) const noexcept;
     inline void RET(State8080&, bool canRet) const noexcept;
+    inline void RST(State8080&, const uint8_t& resNum);
 
     inline void ADD(State8080&, const uint8_t& reg);
     inline void ADC(State8080&, const uint8_t& reg);
