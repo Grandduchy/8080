@@ -36,8 +36,40 @@ void MainWindow::setKey(QKeyEvent*& key, bool toggle) {
         keyMap[Qt::Key_Left] = toggle;
 }
 
+void MainWindow::OPInput() {
+    static std::array<uint16_t, 8> portOut{};
+    uint8_t portNum = state.memory[state.programCounter + 1];
+    state.programCounter += 2;
+    switch(portNum) {
+        case 3:  {// bits 0-7 shift register data
+
+        }
+        break;
+        default:
+            std::cerr << "Possible Error at 0x" << std::hex << state.programCounter << std::endl;
+    }
+}
+void MainWindow::OPOutput() {
+    static std::array<uint16_t, 8> portIn{};
+
+}
+
 void MainWindow::runCycle() {
-    cpu.runCycle(state);
+    uint8_t opcode = state.memory[state.programCounter];
+    // For now emulation will occur in two places
+
+    // Input, next byte is read from input device number and replaces accumulator
+    if (opcode == 0xDB) {
+        OPInput();
+    }
+    // Output
+    // The contents of accumulator are sent to output device number
+    else if (opcode == 0xD3) {
+        OPOutput();
+    }
+    else {
+        cpu.runCycle(state);
+    }
 }
 
 void MainWindow::loadFile(const QString& qtRscFile) {

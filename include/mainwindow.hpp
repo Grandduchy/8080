@@ -32,6 +32,9 @@ private:
     void loadFile(const QString& qtRscFile);
     void setKey(QKeyEvent*& key, bool toggle);
     void runCycle();
+
+    void OPInput();
+    void OPOutput();
 };
 
 #endif // MAINWINDOW_HPP
