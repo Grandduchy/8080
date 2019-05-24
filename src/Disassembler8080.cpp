@@ -10,7 +10,29 @@
 
 #define EXECOPCODE(obj, ptr, state) ((obj).*(ptr))(state) // executes a pointer to a function member with the object
 
+// Also add +6 if successful RET or CALL
+const std::array<const uint8_t, 256> Disassembler8080::opCycles = {
+    //  0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
+        4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7,  4,  // 0
+        4,  10, 7,  5,  5,  5,  7,  4,  4,  10, 7,  5,  5,  5,  7,  4,  // 1
+        4,  10, 16, 5,  5,  5,  7,  4,  4,  10, 16, 5,  5,  5,  7,  4,  // 2
+        4,  10, 13, 5,  10, 10, 10, 4,  4,  10, 13, 5,  5,  5,  7,  4,  // 3
+        5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 4
+        5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 5
+        5,  5,  5,  5,  5,  5,  7,  5,  5,  5,  5,  5,  5,  5,  7,  5,  // 6
+        7,  7,  7,  7,  7,  7,  7,  7,  5,  5,  5,  5,  5,  5,  7,  5,  // 7
+        4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // 8
+        4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // 9
+        4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // A
+        4,  4,  4,  4,  4,  4,  7,  4,  4,  4,  4,  4,  4,  4,  7,  4,  // B
+        5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // C
+        5,  10, 10, 10, 11, 11, 7,  11, 5,  10, 10, 10, 11, 11, 7,  11, // D
+        5,  10, 10, 18, 11, 11, 7,  11, 5,  5,  10, 5,  11, 11, 7,  11, // E
+        5,  10, 10, 4,  11, 11, 7,  11, 5,  5,  10, 4,  11, 11, 7,  11  // F
+};
+
 Disassembler8080::Disassembler8080() {
+
     for (auto& opcodePtr : opcodeTable) {
         opcodePtr = &Disassembler8080::unimplemented;
     }
@@ -200,11 +222,11 @@ Disassembler8080::Disassembler8080() {
     std::cout << std::dec;
 }
 
-
 void Disassembler8080::runCycle(State8080& state) {
     uint8_t opcode = state.memory[state.programCounter];
     opcodePtr opcodeFunc = opcodeTable[opcode];
     EXECOPCODE(*this, opcodeFunc, state);
+    state.cycleCount += opCycles[opcode];
     wasUnimplemented = opcodeFunc == &Disassembler8080::unimplemented;
     wasTodo = opcodeFunc == &Disassembler8080::todo;
     if (opcodeFunc == &Disassembler8080::OP_IND8 || opcodeFunc == &Disassembler8080::OP_OUTD8)
@@ -451,6 +473,7 @@ inline void Disassembler8080::CALL(State8080& state, bool canJump) const noexcep
         state.stackPointer -= 2;
         state.programCounter = newAddress;
         --state.programCounter; // inverse the increment of the program counter
+        state.cycleCount += 6;
     }
     else {
        state.programCounter += 2;
@@ -464,8 +487,21 @@ inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept 
         state.programCounter = static_cast<uint16_t>(state.memory[state.stackPointer] | (state.memory[state.stackPointer + 1] << 8) );
         state.stackPointer += 2;
         --state.programCounter;
+        state.cycleCount += 6;
         // increment of PC is ok here, returnAddress is purposely set to 2 instead of 3 to note of this.
     }
+}
+
+inline void Disassembler8080::RST(State8080& state, const uint8_t& resLoc) {
+    uint16_t newAddress = 8 * resLoc;
+    uint16_t returnAddress = state.programCounter + 3; // skip to the next instruction after this one
+    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
+    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
+    state.stackPointer -= 2;
+    state.programCounter = newAddress;
+    --state.programCounter; // inverse the increment of the program counter
+    state.cycleCount += 6;
+
 }
 
 /********************/
@@ -792,16 +828,7 @@ void Disassembler8080::OP_RST(State8080& state) {
 
 }
 
-inline void Disassembler8080::RST(State8080& state, const uint8_t& resLoc) {
-    uint16_t newAddress = 8 * resLoc;
-    uint16_t returnAddress = state.programCounter + 3; // skip to the next instruction after this one
-    state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
-    state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
-    state.stackPointer -= 2;
-    state.programCounter = newAddress;
-    --state.programCounter; // inverse the increment of the program counter
 
-}
 
 ////// INTERRUPT INSTRUCTIONS
 

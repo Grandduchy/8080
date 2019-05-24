@@ -12,6 +12,7 @@ public:
     Disassembler8080();
     void runCycle(State8080&);
     std::array<opcodePtr, 256> opcodeTable;
+    static const std::array<const uint8_t, 256> opCycles;
 
     bool wasUnimplemented = false;
     bool wasTodo = false;
@@ -204,5 +205,7 @@ private:
     inline void CMP(State8080&, const uint8_t& reg);
 
 };
+
+
 
 #endif // DISASSEMBLER8080_HPP

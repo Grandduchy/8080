@@ -22,6 +22,7 @@ struct State8080 {
     uint8_t a; //accumulator register
     static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
+    uint32_t cycleCount = 0;
     ConditionFlags condFlags;
     bool allowInterrupt = false;
     bool halted = false;
