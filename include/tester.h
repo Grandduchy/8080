@@ -7,7 +7,7 @@
 
 #ifdef TESTENABLE
 
-    #define OPTEST
+    //#define OPTEST
     //#define MANUALTEST
     //#define CPUDIAGTEST
 

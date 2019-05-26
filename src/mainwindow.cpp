@@ -1,5 +1,6 @@
 #include <QTemporaryDir>
 #include <QKeyEvent>
+#include <QPainter>
 #include <iostream>
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
@@ -8,10 +9,14 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+    QSize sz(256 * 2, 224 * 2); // offset of y is 40
+    ui->centralWidget->setFixedSize(sz);
+    ui->centralWidget->setMaximumSize(sz);
+    ui->centralWidget->setMinimumSize(sz);
     // Every time timer goes off, runcycle will run
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
-    timer->start(1000);
+    timer->start(0);
     // For now always assume we're running invaders
     loadFile(":/roms/invaders");
 }
@@ -81,6 +86,38 @@ void MainWindow::runCycle() {
     else {
         cpu.runCycle(state);
     }
+
+    if (cpuSteps == 100000) {
+        repaint();
+    }
+    ++cpuSteps;
+}
+
+void MainWindow::paint() {
+    constexpr int yOffset = 40;
+    QPainter painterBlack(this);
+    QPainter painterWhite(this);
+    painterBlack.setPen(Qt::black);
+    painterBlack.setBrush(Qt::black);
+    painterWhite.setPen(Qt::white);
+    painterWhite.setPen(Qt::white);
+    auto& memory = state.memory;
+    for (int y = 0; y != 244; y++) {
+        for (int x = 0; x != 256; x++) {
+            uint8_t byte = memory[0x2400 + y + x];
+            if (byte == 1)
+                painterBlack.drawRect(x * 2, (y * 2) + yOffset, 2, 2);
+            else if (byte == 0)
+                painterWhite.drawRect(x * 2, (y * 2) + yOffset, 2, 2);
+            else
+                throw std::runtime_error("err");
+        }
+    }
+
+}
+
+void MainWindow::paintEvent(QPaintEvent*) {
+    paint();
 }
 
 void MainWindow::loadFile(const QString& qtRscFile) {

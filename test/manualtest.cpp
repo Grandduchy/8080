@@ -1,6 +1,6 @@
 #include "tester.h"
 
-#ifdef sideTest
+#ifdef MANUALTEST
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -70,7 +70,7 @@ int main() {
     State8080 state;
     std::cout << "Enter the amount of cycles to run, -1 is to restart, -2 is to exit" << std::endl;
     try {
-        state = stateFromFile("../8080/rsc/invaders",0);
+        state = stateFromFile("../8080/invaders",0);
     } catch (...) {
         std::cerr << "Failed write into memory, problems may ensure. \n";
     }
@@ -79,7 +79,7 @@ int main() {
     std::cout << std::hex;
     int sum = 0;
     while(true) {
-        int i = check<int>("");
+        int i = check<int>("...");
         if (i == -2) break;
         if (i == -1) {
             std::cout << "Restarting... \n";

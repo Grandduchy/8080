@@ -21,6 +21,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent* key) override;
     void keyReleaseEvent(QKeyEvent* key) override;
+    void paintEvent(QPaintEvent* ) override;
 private:
     Ui::MainWindow * ui;
 
@@ -28,10 +29,11 @@ private:
     Disassembler8080 cpu;
     QMap<Qt::Key, bool> keyMap;
     QTimer* timer;
-
+    uint32_t cpuSteps = 0;
     void loadFile(const QString& qtRscFile);
     void setKey(QKeyEvent*& key, bool toggle);
     void runCycle();
+    void paint();
 
     void OP_Input();
     void OP_Output(const uint8_t& value);
