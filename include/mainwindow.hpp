@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
+#include "debugwindow.hpp"
 
 
 namespace Ui {
@@ -29,6 +30,8 @@ private:
     Disassembler8080 cpu;
     QMap<Qt::Key, bool> keyMap;
     QTimer* timer;
+    DebugWindow* debugWindow;
+
     uint32_t cpuSteps = 0;
     void loadFile(const QString& qtRscFile);
     void setKey(QKeyEvent*& key, bool toggle);

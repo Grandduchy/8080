@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     QSize sz(256 * 2, 224 * 2); // offset of y is 40
+    debugWindow = new DebugWindow();
+    //debugWindow->show();
     ui->centralWidget->setFixedSize(sz);
     ui->centralWidget->setMaximumSize(sz);
     ui->centralWidget->setMinimumSize(sz);
@@ -109,8 +111,8 @@ void MainWindow::paint() {
                 painterBlack.drawRect(x * 2, (y * 2) + yOffset, 2, 2);
             else if (byte == 0)
                 painterWhite.drawRect(x * 2, (y * 2) + yOffset, 2, 2);
-            else
-                throw std::runtime_error("err");
+           // else
+                //throw std::runtime_error("err");
         }
     }
 
