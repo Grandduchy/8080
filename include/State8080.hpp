@@ -23,6 +23,12 @@ struct State8080 {
     static constexpr uint16_t RAM = 0xFFFF;
     std::array<uint8_t, RAM> memory;
     uint32_t cycleCount = 0;
+    // Variables for shift registering
+    uint8_t shiftLHS = 0;
+    uint8_t shiftRHS = 0;
+    int shiftOffset = 0;
+
+
     ConditionFlags condFlags;
     bool allowInterrupt = false;
     bool halted = false;

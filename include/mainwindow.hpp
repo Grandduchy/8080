@@ -33,8 +33,8 @@ private:
     void setKey(QKeyEvent*& key, bool toggle);
     void runCycle();
 
-    void OPInput();
-    void OPOutput();
+    void OP_Input();
+    void OP_Output(const uint8_t& value);
 };
 
 #endif // MAINWINDOW_HPP

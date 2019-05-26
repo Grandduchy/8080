@@ -36,22 +36,33 @@ void MainWindow::setKey(QKeyEvent*& key, bool toggle) {
         keyMap[Qt::Key_Left] = toggle;
 }
 
-void MainWindow::OPInput() {
-    static std::array<uint16_t, 8> portOut{};
+void MainWindow::OP_Input() {
     uint8_t portNum = state.memory[state.programCounter + 1];
     state.programCounter += 2;
     switch(portNum) {
-        case 3:  {// bits 0-7 shift register data
-
+        case 3:  {// Returns the result of the shift into accumulator
+            uint16_t fullByte = static_cast<uint16_t>((static_cast<uint16_t>(state.shiftLHS) << 8) | state.shiftRHS);
+            uint8_t result = static_cast<uint8_t>(fullByte >> (8 - state.shiftOffset) );
+            state.a = result;
         }
         break;
         default:
             std::cerr << "Possible Error at 0x" << std::hex << state.programCounter << std::endl;
     }
 }
-void MainWindow::OPOutput() {
-    static std::array<uint16_t, 8> portIn{};
 
+void MainWindow::OP_Output(const uint8_t& value) {
+    uint8_t port = state.memory[state.programCounter + 1];
+    state.programCounter += 2;
+    switch(port) {
+        case 2:
+            state.shiftOffset = value & 0x7;
+            break;
+        case 4: // value acts as the new lhs
+            state.shiftRHS = state.shiftLHS;
+            state.shiftLHS = value;
+            break;
+    }
 }
 
 void MainWindow::runCycle() {
@@ -60,12 +71,12 @@ void MainWindow::runCycle() {
 
     // Input, next byte is read from input device number and replaces accumulator
     if (opcode == 0xDB) {
-        OPInput();
+        OP_Input();
     }
     // Output
     // The contents of accumulator are sent to output device number
     else if (opcode == 0xD3) {
-        OPOutput();
+        OP_Output(state.a);
     }
     else {
         cpu.runCycle(state);
