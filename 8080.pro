@@ -33,8 +33,8 @@ RESOURCES += \
     resources.qrc
 
 FORMS += \
-    mainwindow.ui \
-    debugwindow.ui
+    forms/mainwindow.ui \
+    forms/debugwindow.ui
 
 
 # Default rules for deployment.
