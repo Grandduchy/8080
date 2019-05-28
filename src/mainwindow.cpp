@@ -125,6 +125,9 @@ void MainWindow::runCycle() {
         cpu.runCycle(state);
     }
     if (getTime() >= nextDraw) {
+        if (cpuSteps >= 100000) {
+            std::cout<<"";
+        }
         repaint();
         nextDraw = getTime() + 120 / 9;
     }
@@ -144,12 +147,12 @@ void MainWindow::paint() {
 
     for (int y = 0; y != 224; y++) {
         for (int x = 0; x != 256; x += 8) {
-
-            uint8_t byte = memory[0x2400 + y + x];
+            // VRAM starts at 0x2400,
+            uint8_t byte = memory[0x2400 + (y * 32) + (x / 8)];
             for (int shift = 0; shift != 8; shift++) {
                 bool bit = (byte >> shift) & 1;
-                if (!bit)
-                    painter.drawRect(x * 2, y * 2 + yOffset, 2, 2);
+                if (bit)
+                    painter.drawRect((x+shift) * 2, (y+shift) * 2 + yOffset, 2, 2);
             }
         }
     }
