@@ -94,7 +94,7 @@ int main() {
                  );
         for (int times = 0; times != i; times++) {
             if (sum == 42433 || sum == 44000) { // because we do not take into account any cycle accuracy, the point it jump varies by thousands.
-                dis.generateInterrupt(state);
+                dis.generateInterrupt(state, 2);
                 lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch()
                          );
@@ -108,7 +108,7 @@ int main() {
                      );
             if ((now - lastInterrupt).count() > 16.7) {
                 if (state.allowInterrupt) {
-                    dis.generateInterrupt(state);
+                    dis.generateInterrupt(state, 2);
                     lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
                                 std::chrono::system_clock::now().time_since_epoch()
                              );

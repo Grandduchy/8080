@@ -28,6 +28,10 @@ struct State8080 {
     uint8_t shiftRHS = 0;
     int shiftOffset = 0;
 
+    uint8_t port1 = 0;
+    uint8_t port2 = 0;
+    uint8_t port3 = 0;
+    uint8_t port5 = 0;
 
     ConditionFlags condFlags;
     bool allowInterrupt = false;

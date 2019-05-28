@@ -17,7 +17,7 @@ public:
     bool wasUnimplemented = false;
     bool wasTodo = false;
 
-    void generateInterrupt(State8080& state);
+    void generateInterrupt(State8080& state, const uint8_t& interruptNum);
 
 private:
 

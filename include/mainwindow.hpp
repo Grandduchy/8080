@@ -40,6 +40,8 @@ private:
 
     void OP_Input();
     void OP_Output(const uint8_t& value);
+
+    inline int64_t getTime() const noexcept;
 };
 
 #endif // MAINWINDOW_HPP
