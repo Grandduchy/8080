@@ -1,0 +1,34 @@
+language: cpp
+compiler: gcc
+dist: trusty
+sudo: required
+
+before_install:
+  # C++14
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+  # Qt
+  - sudo apt-get install -qq libqt5webkit5-dev libsqlite3-dev
+  - sudo apt-get install -qq qtbase5-dev qtdeclarative5-dev
+  - sudo apt-get install -qq qt5-default qttools5-dev-tools
+  - sudo apt-get install qtmultimedia5-dev
+  - export QMAKE=/usr/lib/x86_64-linux-gnu/qt5/bin/qmake
+  
+  # BOOST
+  - sudo apt-get install -qq libboost-dev
+
+install: 
+  # C++14
+  - sudo apt-get install -qq g++-6
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+
+script:
+        - qmake
+        - make
+        - test -e 8080 # Was the binary created
+        - cd test
+        - python allowRunTests.py
+        - qmake
+        - make
+        - chmod +x runTest
+        - ./runTest # Does it pass the tests
