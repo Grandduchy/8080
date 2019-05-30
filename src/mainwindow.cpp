@@ -149,8 +149,9 @@ void MainWindow::paint() {
 
     for (int y = 0; y != 224; y++) {
         for (int x = 0; x != 256; x += 8) {
-            // VRAM starts at 0x2400,
-            uint8_t byte = memory[0x2400 + (y * 32) + (x / 8)];
+            // VRAM starts at 0x2400, y and x expressions are offset
+            std::size_t vRamLoc = static_cast<std::size_t>(0x2400 + (y * 32) + (x / 8));
+            uint8_t byte = memory[vRamLoc];
             for (int shift = 0; shift != 8; shift++) {
                 bool bit = (byte >> shift) & 1;
                 if (bit) {
