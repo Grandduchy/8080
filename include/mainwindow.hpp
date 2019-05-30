@@ -33,6 +33,9 @@ private:
     DebugWindow* debugWindow;
 
     uint32_t cpuSteps = 0;
+    static constexpr int width = 256;
+    static constexpr int height = 224;
+    static int reFac; // resize factor, 1 for 256x224...
     void loadFile(const QString& qtRscFile);
     void setKey(QKeyEvent*& key, bool toggle);
     void runCycle();

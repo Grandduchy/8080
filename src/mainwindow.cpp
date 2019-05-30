@@ -5,16 +5,19 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
+#include <QPoint>
+
+int MainWindow::reFac = 2;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    QSize sz(256 * 2, 224 * 2); // offset of y is 40
+    QSize sz(256 * reFac, 256 * reFac);
     debugWindow = new DebugWindow();
     //debugWindow->show();
     ui->centralWidget->setFixedSize(sz);
-    ui->centralWidget->setMaximumSize(sz);
     ui->centralWidget->setMinimumSize(sz);
+    ui->centralWidget->setMaximumSize(sz);
     // Every time timer goes off, runcycle will run
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
@@ -93,21 +96,22 @@ void MainWindow::OP_Output(const uint8_t& value) {
 }
 
 void MainWindow::runCycle() {
-
     static uint8_t interruptNum = 1;
+
     // this time is in miliseconds
+    static constexpr uint8_t next60Hz = 120 / 9;
     static int64_t nextInterrupt = 0;
     static int64_t nextDraw = 0;
 
     if (nextInterrupt == 0) {
-        nextInterrupt = getTime() + (120 / 9);
-        nextDraw = getTime() + (120 / 9);
+        nextInterrupt = getTime() + next60Hz;
+        nextDraw = getTime() + next60Hz;
     }
 
     if (state.allowInterrupt && getTime() >= nextInterrupt) {
         cpu.generateInterrupt(state, interruptNum);
         interruptNum =  interruptNum == 1 ? 2 : 1;
-        nextInterrupt = getTime() + 120 / 9;
+        nextInterrupt = getTime() + next60Hz;
     }
 
     uint8_t opcode = state.memory[state.programCounter];
@@ -125,25 +129,23 @@ void MainWindow::runCycle() {
         cpu.runCycle(state);
     }
     if (getTime() >= nextDraw) {
-        if (cpuSteps >= 100000) {
-            std::cout<<"";
-        }
         repaint();
-        nextDraw = getTime() + 120 / 9;
+        nextDraw = getTime() + next60Hz;
     }
     ++cpuSteps;
 }
 
 void MainWindow::paint() {
-    constexpr int yOffset = 40;
+    static constexpr int yOffset = 40;
     QPainter painter(this);
     painter.setPen(Qt::black);
     painter.setBrush(Qt::black);
-    painter.drawRect(0,0, 256 * 2, 224 * 2 + yOffset);
+    painter.drawRect(0,0, 256 * reFac, 256 * reFac + yOffset);
     painter.setPen(Qt::white);
     painter.setBrush(Qt::white);
     auto& memory = state.memory;
 
+    painter.rotate(-90);
 
     for (int y = 0; y != 224; y++) {
         for (int x = 0; x != 256; x += 8) {
@@ -151,9 +153,13 @@ void MainWindow::paint() {
             uint8_t byte = memory[0x2400 + (y * 32) + (x / 8)];
             for (int shift = 0; shift != 8; shift++) {
                 bool bit = (byte >> shift) & 1;
-                if (bit)
-                    painter.drawRect((x+shift) * 2, (y+shift) * 2 + yOffset, 2, 2);
+                if (bit) {
+                    // The - 60 is made from observation
+                   // painter.drawRect((x+shift) * 2, y * 2 + yOffset, 2, 2); <- original drawRect without rotation
+                    painter.drawRect( (x+shift) * reFac - (height * reFac) - yOffset - 60, y * reFac + yOffset, reFac, reFac);
+                }
             }
+
         }
     }
 }
