@@ -2,7 +2,7 @@
 
 #ifdef TESTS
 
-#define BOOST_TEST_MODULE opcode_test
+#define BOOST_TEST_MODULE opcodeTests_&_cpuDiagTests
 #include <boost/test/included/unit_test.hpp>
 #include <regex>
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(cpudiagtests) {
     try {
         // Run the tests, check if the success message in within the message given from the test
         // if does continue, otherwise send out an error
-        runTest("../../8080/rsc/8080PRE.COM");
+        runTest("../rsc/8080PRE.COM");
 
         std::regex pattern("8080 Preliminary tests complete");
         if (std::regex_search(message, pattern))
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(cpudiagtests) {
     message.clear(); // clear old message
 
     try {
-        runTest("../../8080/rsc/TST8080.COM");
+        runTest("../rsc/TST8080.COM");
 
         std::regex pattern("CPU IS OPERATIONAL");
         if (std::regex_search(message, pattern))
