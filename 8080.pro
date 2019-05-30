@@ -14,9 +14,8 @@ SOURCES += \
         src/Disassembler8080.cpp \
         src/State8080.cpp \
         src/main.cpp \
-        test/cpudiagtest.cpp \
         test/manualtest.cpp \
-        test/optest.cpp
+        test/tests.cpp
 
 HEADERS += \
     include/ConditionFlags.hpp \
@@ -41,3 +40,6 @@ FORMS += \
 #qnx: target.path = /tmp/$${TARGET}/bin
 #else: unix:!android: target.path = /opt/$${TARGET}/bin
 #!isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    test/allowRunTests.py

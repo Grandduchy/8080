@@ -2,6 +2,7 @@
 #include <QKeyEvent>
 #include <QPainter>
 #include <iostream>
+#include <chrono>
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 

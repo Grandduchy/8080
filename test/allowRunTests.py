@@ -15,8 +15,8 @@ if not os.path.isfile(headerFile) :
 
 
 for line in fileinput.input(headerFile, inplace = True):
-    if "//#define TESTENABLE" in line:
-        line = line.replace("//#define TESTENABLE", "#define TESTENABLE")
-    if "//#define TESTS" in line:
-        line = line.replace("//#define TESTS", "#define TESTS")
+    if "// #define TESTENABLE" in line:
+        line = line.replace("// #define TESTENABLE", "#define TESTENABLE")
+    if "// #define TESTS" in line:
+        line = line.replace("// #define TESTS", "#define TESTS")
     print(line)
