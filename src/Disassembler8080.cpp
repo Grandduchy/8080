@@ -236,7 +236,7 @@ void Disassembler8080::runCycle(State8080& state) {
 
 void Disassembler8080::generateInterrupt(State8080& state, const uint8_t& interruptNum) {
     // push PC onto the stack
-    uint16_t returnAddress = state.programCounter + 1; // -5 works for ~42476
+    uint16_t returnAddress = state.programCounter; // -5 works for ~42476
     state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
     state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
     state.stackPointer -= 2;
