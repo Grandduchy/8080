@@ -3,11 +3,11 @@
 
 // commout out all but one to run a specific test
 // comment out testenable to run main program
-#define TESTENABLE
+//#define TESTENABLE
 
 #ifdef TESTENABLE
 
-    #define OPTEST
+    //#define OPTEST
     //#define MANUALTEST
     //#define CPUDIAGTEST
 

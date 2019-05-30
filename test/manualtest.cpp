@@ -1,6 +1,6 @@
 #include "tester.h"
 
-#ifdef sideTest
+#ifdef MANUALTEST
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -70,7 +70,7 @@ int main() {
     State8080 state;
     std::cout << "Enter the amount of cycles to run, -1 is to restart, -2 is to exit" << std::endl;
     try {
-        state = stateFromFile("../8080/rsc/invaders",0);
+        state = stateFromFile("../8080/invaders",0);
     } catch (...) {
         std::cerr << "Failed write into memory, problems may ensure. \n";
     }
@@ -79,7 +79,7 @@ int main() {
     std::cout << std::hex;
     int sum = 0;
     while(true) {
-        int i = check<int>("");
+        int i = check<int>("...");
         if (i == -2) break;
         if (i == -1) {
             std::cout << "Restarting... \n";
@@ -94,7 +94,7 @@ int main() {
                  );
         for (int times = 0; times != i; times++) {
             if (sum == 42433 || sum == 44000) { // because we do not take into account any cycle accuracy, the point it jump varies by thousands.
-                dis.generateInterrupt(state);
+                dis.generateInterrupt(state, 2);
                 lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch()
                          );
@@ -108,7 +108,7 @@ int main() {
                      );
             if ((now - lastInterrupt).count() > 16.7) {
                 if (state.allowInterrupt) {
-                    dis.generateInterrupt(state);
+                    dis.generateInterrupt(state, 2);
                     lastInterrupt = std::chrono::duration_cast<std::chrono::milliseconds>(
                                 std::chrono::system_clock::now().time_since_epoch()
                              );

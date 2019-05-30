@@ -234,15 +234,16 @@ void Disassembler8080::runCycle(State8080& state) {
     state.programCounter++;
 }
 
-void Disassembler8080::generateInterrupt(State8080& state) {
+void Disassembler8080::generateInterrupt(State8080& state, const uint8_t& interruptNum) {
     // push PC onto the stack
-    uint16_t returnAddress = state.programCounter - 1; // -5 works for ~42476
+    uint16_t returnAddress = state.programCounter; // -5 works for ~42476
     state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit
     state.memory[state.stackPointer - 2] = returnAddress & 0xFF; // store low bit
     state.stackPointer -= 2;
     // while there are 8 different numbers other than 2 for RST,
     // space invaders only uses number 2.
-    state.programCounter = 8 * 2;
+    state.programCounter = 8 * interruptNum;
+    state.allowInterrupt = false;
 }
 
 inline void Disassembler8080::setZero(State8080& state, const uint16_t& expr) const noexcept {

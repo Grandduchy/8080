@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/rsc">
-        <file>src/invaders</file>
+    <qresource prefix="/roms">
+        <file>invaders</file>
     </qresource>
 </RCC>
