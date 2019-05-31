@@ -21,7 +21,7 @@ sudo apt install qtbase5-dev qtdeclarative5-dev
 sudo apt install qt5-default qttools5-dev-tools
 sudo apt install qtmultimedia5-dev
 ```
-Depending on the installation, Amake will need to be configured this is done by:
+Depending on the installation, Qmake will need to be configured this is done by:
 ```
 export QMAKE=/usr/lib/x86_64-linux-gnu/qt5/bin/qmake
 ```
