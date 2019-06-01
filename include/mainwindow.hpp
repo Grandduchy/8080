@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QTimer>
 #include <QMediaPlayer>
+#include <QSoundEffect>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
 #include "debugwindow.hpp"
@@ -49,6 +50,7 @@ private:
 
     inline int64_t getTime() const noexcept;
     QMediaPlayer* player;
+    QSoundEffect ufoSoundEffect;
 };
 
 #endif // MAINWINDOW_HPP

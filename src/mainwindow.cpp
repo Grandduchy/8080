@@ -8,6 +8,8 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
+#include <QSoundEffect>
+
 int MainWindow::reFac = 2; // The resize factor
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -26,6 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     loadFile(":/roms/rsc/invaders");
     player = new QMediaPlayer(this);
+
+    ufoSoundEffect.setSource(QUrl("qrc:/media/rsc/audio/Ufo.wav"));
+    ufoSoundEffect.setVolume(0.33);
+    ufoSoundEffect.setLoopCount(QSoundEffect::Infinite);
 }
 
 MainWindow::~MainWindow() {
@@ -137,6 +143,8 @@ void MainWindow::OP_Output(const uint8_t& value) {
     }
 }
 
+
+
 void MainWindow::soundHandle() {
     static uint8_t lastPort3 = 0;
     static uint8_t lastPort5 = 0;
@@ -159,13 +167,14 @@ void MainWindow::soundHandle() {
     };
 
 
-
     if (lastPort3 != state.port3) {
         // UFO sounds, they constantly loop, all other sounds are different in that they only play once
         if ( (state.port3 & 0x1) && !(lastPort3 & 0x1) ) {
+            ufoSoundEffect.play();
             std::cerr << "Start\n";
         }
         else if ( !(state.port3 & 0x1) && (lastPort3 & 0x1) ) {
+            ufoSoundEffect.stop();
             std::cerr << "Stop\n";
         }
         soundPlayP3(0x2, "Shot.wav");
