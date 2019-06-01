@@ -2,4 +2,15 @@
     <qresource prefix="/roms">
         <file>rsc/invaders</file>
     </qresource>
+    <qresource prefix="/media">
+        <file>rsc/audio/BaseHit.wav</file>
+        <file>rsc/audio/InvHit.wav</file>
+        <file>rsc/audio/Shot.wav</file>
+        <file>rsc/audio/Ufo.wav</file>
+        <file>rsc/audio/UfoHit.wav</file>
+        <file>rsc/audio/Walk1.wav</file>
+        <file>rsc/audio/Walk2.wav</file>
+        <file>rsc/audio/Walk3.wav</file>
+        <file>rsc/audio/Walk4.wav</file>
+    </qresource>
 </RCC>

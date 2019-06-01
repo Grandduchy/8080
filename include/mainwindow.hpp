@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QTimer>
+#include <QSound>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
 #include "debugwindow.hpp"
@@ -42,10 +43,12 @@ private:
     void paint();
 
     void registerInput();
+    void soundHandle();
     void OP_Input();
     void OP_Output(const uint8_t& value);
 
     inline int64_t getTime() const noexcept;
+    QSound ufoSound;
 };
 
 #endif // MAINWINDOW_HPP
