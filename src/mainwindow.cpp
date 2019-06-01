@@ -1,18 +1,17 @@
 #include <QTemporaryDir>
 #include <QKeyEvent>
 #include <QPainter>
-#include <QSound>
+#include <QMediaPlayer>
+#include <QUrl>
 #include <iostream>
 #include <chrono>
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
-#include <QPoint>
-
 int MainWindow::reFac = 2; // The resize factor
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), ui(new Ui::MainWindow), ufoSound(":/media/rsc/audio/Ufo.wav", this) {
+    QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     QSize sz(256 * reFac, 256 * reFac);
     debugWindow = new DebugWindow();
@@ -24,9 +23,9 @@ MainWindow::MainWindow(QWidget *parent) :
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
     timer->start(0);
-    // For now always assume we're running invaders
+
     loadFile(":/roms/rsc/invaders");
-    ufoSound.setLoops(QSound::Infinite);
+    player = new QMediaPlayer(this);
 }
 
 MainWindow::~MainWindow() {
@@ -143,13 +142,14 @@ void MainWindow::soundHandle() {
     static uint8_t lastPort5 = 0;
 
     // Function plays a sound if the condition is met with both state ports
-    static auto playSoundIf = [](const uint8_t& statePort, const uint8_t& lastPort, const uint8_t& expr, const QString& soundFName){
+    static auto playSoundIf = [&](const uint8_t& statePort, const uint8_t& lastPort, const uint8_t& expr, const QString& soundFName){
         if ( (statePort & expr) && !(lastPort & expr) ) {
-            QSound::play(soundFName);
+            player->setMedia(QUrl(soundFName));
+            player->play();
         }
     };
 
-    static const QString pathPrefix(":/media/rsc/audio/");
+    static const QString pathPrefix("qrc:/media/rsc/audio/");
 
     static auto soundPlayP3 = [&](const uint8_t& expr, const QString& soundFName) {
       playSoundIf(state.port3, lastPort3, expr, pathPrefix + soundFName);
@@ -163,11 +163,9 @@ void MainWindow::soundHandle() {
     if (lastPort3 != state.port3) {
         // UFO sounds, they constantly loop, all other sounds are different in that they only play once
         if ( (state.port3 & 0x1) && !(lastPort3 & 0x1) ) {
-            ufoSound.play();
             std::cerr << "Start\n";
         }
         else if ( !(state.port3 & 0x1) && (lastPort3 & 0x1) ) {
-            ufoSound.stop();
             std::cerr << "Stop\n";
         }
         soundPlayP3(0x2, "Shot.wav");

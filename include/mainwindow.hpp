@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QTimer>
-#include <QSound>
+#include <QMediaPlayer>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
 #include "debugwindow.hpp"
@@ -48,7 +48,7 @@ private:
     void OP_Output(const uint8_t& value);
 
     inline int64_t getTime() const noexcept;
-    QSound ufoSound;
+    QMediaPlayer* player;
 };
 
 #endif // MAINWINDOW_HPP
