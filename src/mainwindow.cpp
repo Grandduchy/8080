@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
     timer->start(0);
     // For now always assume we're running invaders
-    loadFile(":/roms/invaders");
+    loadFile(":/roms/rsc/invaders");
 }
 
 MainWindow::~MainWindow() {

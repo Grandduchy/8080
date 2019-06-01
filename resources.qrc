@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/roms">
-        <file>invaders</file>
+        <file>rsc/invaders</file>
     </qresource>
 </RCC>
