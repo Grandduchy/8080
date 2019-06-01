@@ -41,10 +41,48 @@ void MainWindow::keyReleaseEvent(QKeyEvent* key) {
 }
 
 void MainWindow::setKey(QKeyEvent*& key, bool toggle) {
-    if (key->key() == Qt::Key_Right)
-        keyMap[Qt::Key_Right] = toggle;
-    if (key->key() == Qt::Key_Left)
-        keyMap[Qt::Key_Left] = toggle;
+    auto registerKey = [&](const Qt::Key& key_t){
+      if (key->key() == key_t)
+          keyMap[key_t] = toggle;
+    };
+    registerKey(Qt::Key_C); // coin key
+    // player 1 keys
+    registerKey(Qt::Key_W);
+    registerKey(Qt::Key_A);
+    registerKey(Qt::Key_D);
+    registerKey(Qt::Key_S);
+    // player 2 keys
+    registerKey(Qt::Key_I);
+    registerKey(Qt::Key_J);
+    registerKey(Qt::Key_L);
+    registerKey(Qt::Key_K);
+
+}
+void MainWindow::registerInput() {
+    auto setKeyToPort = [&](uint8_t& port, const uint8_t& bit, const Qt::Key& key) {
+        // Ensure key exists
+        if (keyMap.find(key) == keyMap.end())
+            return;
+        // if the key is on set the bit, otherwise clear the bit
+        if (keyMap[key]) {
+            port |= (1 << bit);
+        }
+        else {
+            port &= ~(1 << bit);
+        }
+    };
+
+    setKeyToPort(state.port1, 0, Qt::Key_C); // coin
+    setKeyToPort(state.port1, 2, Qt::Key_S); // p1 start
+    setKeyToPort(state.port1, 4, Qt::Key_W); // shoot
+    setKeyToPort(state.port1, 5, Qt::Key_A); // p1 joystick left
+    setKeyToPort(state.port1, 6, Qt::Key_D); // p1 jotstick right
+
+    setKeyToPort(state.port1, 1, Qt::Key_K); // p2 start
+    setKeyToPort(state.port2, 4, Qt::Key_I); // p2 shoot
+    setKeyToPort(state.port2, 5, Qt::Key_J); // p2 joystick left
+    setKeyToPort(state.port2, 6, Qt::Key_L); // p2 joystick right
+
 }
 
 void MainWindow::OP_Input() {
@@ -127,6 +165,7 @@ void MainWindow::runCycle() {
         OP_Output(state.a);
     }
     else {
+        registerInput();
         cpu.runCycle(state);
     }
     if (getTime() >= nextDraw) {

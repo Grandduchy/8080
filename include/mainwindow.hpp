@@ -41,6 +41,7 @@ private:
     void runCycle();
     void paint();
 
+    void registerInput();
     void OP_Input();
     void OP_Output(const uint8_t& value);
 
