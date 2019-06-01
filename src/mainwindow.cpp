@@ -2,13 +2,15 @@
 #include <QKeyEvent>
 #include <QPainter>
 #include <QMediaPlayer>
+#include <QSoundEffect>
+#include <QSound>
 #include <QUrl>
 #include <iostream>
 #include <chrono>
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
-#include <QSoundEffect>
+
 
 int MainWindow::reFac = 2; // The resize factor
 
@@ -152,8 +154,16 @@ void MainWindow::soundHandle() {
     // Function plays a sound if the condition is met with both state ports
     static auto playSoundIf = [&](const uint8_t& statePort, const uint8_t& lastPort, const uint8_t& expr, const QString& soundFName){
         if ( (statePort & expr) && !(lastPort & expr) ) {
-            player->setMedia(QUrl(soundFName));
-            player->play();
+            std::string f = soundFName.toStdString();
+            auto slash = std::find(f.rbegin(), f.rend(), '/').base();
+            std::string walk(slash, slash + 4);
+            // If the sound is one of the walks, QSound cannot play it, use qmediaplayer instead
+            if (walk == "Walk") {
+                player->setMedia(QUrl(soundFName));
+                player->play();
+            }
+            else
+                QSound::play(soundFName);
         }
     };
 
