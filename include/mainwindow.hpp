@@ -19,22 +19,22 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() override;
+    virtual ~MainWindow() override;
 
 protected:
-    void keyPressEvent(QKeyEvent* key) override;
-    void keyReleaseEvent(QKeyEvent* key) override;
-    void paintEvent(QPaintEvent* ) override;
+    void virtual keyPressEvent(QKeyEvent* key) override;
+    void virtual keyReleaseEvent(QKeyEvent* key) override;
+    void virtual paintEvent(QPaintEvent* ) override;
 private:
     Ui::MainWindow * ui;
 
     State8080 state;
     Disassembler8080 cpu;
-    QMap<Qt::Key, bool> keyMap;
-    QTimer* timer;
+    QMap<Qt::Key, bool> keyMap; // key map to determine if a specific key is on
+    QTimer* timer; // timer used to loop running cycles
     DebugWindow* debugWindow;
 
-    uint32_t cpuSteps = 0;
+    uint32_t cpuSteps = 0; // the amount of times cpu has been executed
     static constexpr int width = 256;
     static constexpr int height = 224;
     static int reFac; // resize factor, 1 for 256x224...
@@ -49,7 +49,7 @@ private:
     void OP_Output(const uint8_t& value);
 
     inline int64_t getTime() const noexcept;
-    QMediaPlayer* player;
+    QMediaPlayer* player; // sound player
     QSoundEffect ufoSoundEffect;
 };
 

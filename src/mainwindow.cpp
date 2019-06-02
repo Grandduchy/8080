@@ -50,6 +50,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* key) {
 }
 
 void MainWindow::setKey(QKeyEvent*& key, bool toggle) {
+    // Set the key on or off onto the map
     auto registerKey = [&](const Qt::Key& key_t){
       if (key->key() == key_t)
           keyMap[key_t] = toggle;
@@ -95,6 +96,7 @@ void MainWindow::registerInput() {
 }
 
 void MainWindow::OP_Input() {
+    // Sets values to the accumualtor
     uint8_t portNum = state.memory[state.programCounter + 1];
     state.programCounter += 2;
     switch(portNum) {
@@ -118,7 +120,7 @@ void MainWindow::OP_Input() {
     }
 }
 
-void MainWindow::OP_Output(const uint8_t& value) {
+void MainWindow::OP_Output(const uint8_t& value) { // note that value is always the accumulator anyways
     uint8_t port = state.memory[state.programCounter + 1];
     state.programCounter += 2;
     switch(port) {
@@ -131,7 +133,6 @@ void MainWindow::OP_Output(const uint8_t& value) {
         case 3:
             state.port3 = value;
             soundHandle();
-            // A sound effect would go in here.
             break;
         case 4: // value acts as the new lhs
             state.shiftRHS = state.shiftLHS;
@@ -139,7 +140,6 @@ void MainWindow::OP_Output(const uint8_t& value) {
             break;
         case 5:
             state.port5 = value;
-            // A sound effect would go in here.
             soundHandle();
             break;
     }
@@ -176,20 +176,20 @@ void MainWindow::soundHandle() {
       playSoundIf(state.port5, lastPort5, expr, pathPrefix + soundFName);
     };
 
-
+    // Check for a change in the ports, if there is a new sound is generated
     if (lastPort3 != state.port3) {
         // UFO sounds, they constantly loop, all other sounds are different in that they only play once
         if ( (state.port3 & 0x1) && !(lastPort3 & 0x1) ) {
             ufoSoundEffect.play();
-            std::cerr << "Start\n";
         }
         else if ( !(state.port3 & 0x1) && (lastPort3 & 0x1) ) {
             ufoSoundEffect.stop();
-            std::cerr << "Stop\n";
         }
+
         soundPlayP3(0x2, "Shot.wav");
         soundPlayP3(0x4, "BaseHit.wav");
         soundPlayP3(0x8, "InvHit.wav");
+
         lastPort3 = state.port3;
     }
 
@@ -200,6 +200,7 @@ void MainWindow::soundHandle() {
         soundPlayP5(0x4, "Walk3.wav");
         soundPlayP5(0x8, "Walk4.wav");
         soundPlayP5(0x10, "UfoHit.wav");
+
         lastPort5 = state.port5;
     }
 
@@ -214,11 +215,13 @@ void MainWindow::runCycle() {
     static int64_t nextInterrupt = 0;
     static int64_t nextDraw = 0;
 
+    // Initalize if needed
     if (nextInterrupt == 0) {
         nextInterrupt = getTime() + next60Hz;
         nextDraw = getTime() + next60Hz;
     }
 
+    // Generate interrupt/draw if its past to the next 60 hz
     if (state.allowInterrupt && getTime() >= nextInterrupt) {
         cpu.generateInterrupt(state, interruptNum);
         interruptNum =  interruptNum == 1 ? 2 : 1;
@@ -227,13 +230,12 @@ void MainWindow::runCycle() {
 
     uint8_t opcode = state.memory[state.programCounter];
     // For now emulation will occur in two places
-    // Input, next byte is read from input device number and replaces accumulator
-    if (opcode == 0xDB) {
+    if (opcode == 0xDB) {// Input
+        // next byte is read from input device number and replaces accumulator
         OP_Input();
     }
-    // Output
-    // The contents of accumulator are sent to output device number
-    else if (opcode == 0xD3) {
+    else if (opcode == 0xD3) {// Output
+        // The contents of accumulator are sent to output device number
         OP_Output(state.a);
     }
     else {
@@ -248,7 +250,7 @@ void MainWindow::runCycle() {
 }
 
 void MainWindow::paint() {
-    static constexpr int yOffset = 40;
+    static constexpr int yOffset = 40; // the amount the window is displayed by y for the screen to be visible
     QPainter painter(this);
     painter.setPen(Qt::black);
     painter.setBrush(Qt::black);
@@ -264,12 +266,15 @@ void MainWindow::paint() {
             // VRAM starts at 0x2400, y and x expressions are offset
             std::size_t vRamLoc = static_cast<std::size_t>(0x2400 + (y * 32) + (x / 8));
             uint8_t byte = memory[vRamLoc];
+            // a single byte determines the next 8 pixels, (does mean the next 7 bytes are wasted)
             for (int shift = 0; shift != 8; shift++) {
                 bool bit = (byte >> shift) & 1;
                 if (bit) {
-                    // The - 60 is made from observation
-                   // painter.drawRect((x+shift) * 2, y * 2 + yOffset, 2, 2); <- original drawRect without rotation
-                    painter.drawRect( (x+shift) * reFac - (height * reFac) - yOffset - 60, y * reFac + yOffset, reFac, reFac);
+                   // painter.drawRect((x+shift) * reFac, y * reFac + yOffset, reFac, reFac); <- original drawRect without rotation
+                   // because screen is rotated x becomes y, y becomes x, screen is also off the screen on the top of the window because of this
+                   // x paramater then must subtract y's total height
+                   // The - 60 is made from observation
+                   painter.drawRect( (x+shift) * reFac - (height * reFac) - yOffset - 60, y * reFac + yOffset, reFac, reFac);
                 }
             }
 
@@ -277,6 +282,7 @@ void MainWindow::paint() {
     }
 }
 
+// Returns the time since epoch in miliseconds
 inline int64_t MainWindow::getTime() const noexcept {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch()
@@ -287,7 +293,10 @@ void MainWindow::paintEvent(QPaintEvent*) {
     paint();
 }
 
+// Loads the invader file from qtresource
 void MainWindow::loadFile(const QString& qtRscFile) {
+    // std streams cannot be used on qt resources, so first copy the file
+    // and use the streams from there
     try {
         QTemporaryDir tempDir;
         QString tempFile;
@@ -301,7 +310,8 @@ void MainWindow::loadFile(const QString& qtRscFile) {
 
         if (!QFileInfo::exists(tempFile))
             throw std::runtime_error("Unable to copy resource file to storage");
-        state = stateFromFile(tempFile.toStdString(), 0);
+
+        state = stateFromFile(tempFile.toStdString(), 0); // use standard streams
     } catch (std::exception& e) {
         std::cerr << "Error loading rom into emulator, " << e.what() << std::endl;
     }
