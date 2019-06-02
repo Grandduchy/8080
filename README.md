@@ -16,7 +16,6 @@ The microprocessor by itself does not require any external libraries other than 
 Qt can either be installed through Qt's website installer located <a href="https://www.qt.io/download-qt-installer">here</a> or by installing by the command line. <br>
 Installing through command line:
 ```
-sudo apt install libqt5webkit5-dev libsqlite3-dev
 sudo apt install qtbase5-dev qtdeclarative5-dev
 sudo apt install qt5-default qttools5-dev-tools
 sudo apt install qtmultimedia5-dev
@@ -79,7 +78,7 @@ To run Modify 8080/include/tester.h by uncommenting the following:
 ```
 Manual testing then are used via 8080/test/manualtest.cpp
 ```
-g++ -std=c++14 manualtest.cpp -L .....
+g++ -std=c++14 manualtest.cpp -I .....
 ```
 
 ## Built With
@@ -100,7 +99,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 * [Emulator101](http://www.emulator101.com) 
 * [Emutalk](http://www.emutalk.net/threads/38177-Space-Invaders) helpful discussion threads, used for memory maps and I/O with ports
-* [Cpu Exercisors](http://www.emulator101.com)
+* [Cpu Exercisors](https://web.archive.org/web/20151006085348/http://www.idb.me.uk/sunhillow/8080.html)
+* [Space Invaders Hardware](http://computerarcheology.com/Arcade/SpaceInvaders/Hardware.html)
 * [Superzazu's 8080](https://github.com/superzazu/8080) for understanding how to deal with aux flag
 * [8080 opcode Table](http://www.pastraiser.com/cpu/i8080/i8080_opcodes.html)
 * [suanyuan's Space Invaders](http://www.emutalk.net/threads/38177-Space-Invaders/page7) for understanding in interrupts
