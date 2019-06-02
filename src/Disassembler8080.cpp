@@ -271,14 +271,14 @@ inline void Disassembler8080::setParity(State8080& state, const uint8_t& expr) c
 // General opcode functions that are done multiple times in each different opcode function
 
 // set register pair to next two bytes
-inline void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, uint8_t& secondRegPair) {
+inline void Disassembler8080::LXI_D16(State8080& state, uint8_t& firstRegPair, uint8_t& secondRegPair) const noexcept {
     secondRegPair = state.memory[state.programCounter + 1];
     firstRegPair = state.memory[state.programCounter + 2];
     state.programCounter += 2;
 }
 
 // Decrement a register
-inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
+inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) const noexcept {
     --reg;
     setZero(state, reg);
     setSign(state, reg);
@@ -288,7 +288,7 @@ inline void Disassembler8080::DCR(State8080& state, uint8_t& reg) {
 }
 
 // Increment a register
-inline void Disassembler8080::INR(State8080& state, uint8_t& reg) {
+inline void Disassembler8080::INR(State8080& state, uint8_t& reg) const noexcept {
     ++reg;
     setZero(state, reg);
     setSign(state, reg);
@@ -298,7 +298,7 @@ inline void Disassembler8080::INR(State8080& state, uint8_t& reg) {
 
 
 // Register pair reg1 & reg2 is added to H & L register pair
-inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& regPair2) const noexcept {
     // combine the pairs
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     uint16_t HL = static_cast<uint16_t>( (static_cast<uint16_t>(state.h) << 8) | state.l);
@@ -311,13 +311,13 @@ inline void Disassembler8080::DAD(State8080& state, uint8_t& regPair1, uint8_t& 
 }
 
 // set register to next byte
-inline void Disassembler8080::MVI_D8(State8080& state, uint8_t& reg) {
+inline void Disassembler8080::MVI_D8(State8080& state, uint8_t& reg) const noexcept {
     reg = state.memory[state.programCounter + 1];
     ++state.programCounter;
 }
 
 // A register pair is incrmeented by one and stored into the pair
-inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
+inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) const noexcept {
     // combine the registers into a pair
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     ++pair;
@@ -327,39 +327,39 @@ inline void Disassembler8080::INX(uint8_t& regPair1,uint8_t& regPair2) {
 }
 
 // A register pair is decremented by one and stored into the pair, same as INX
-inline void Disassembler8080::DCX(uint8_t& regPair1, uint8_t& regPair2) {
+inline void Disassembler8080::DCX(uint8_t& regPair1, uint8_t& regPair2) const noexcept {
     uint16_t pair = static_cast<uint16_t>( (static_cast<uint16_t>(regPair1) << 8) | regPair2);
     --pair;
     regPair1 = (pair & 0xFF00) >> 8;
     regPair2 = pair & 0x00FF;
 }
 
-inline void Disassembler8080::MOV(uint8_t& dst, uint8_t& src) {
+inline void Disassembler8080::MOV(uint8_t& dst, uint8_t& src) const noexcept {
     dst = src;
 }
-inline void Disassembler8080::MOV_SRC(State8080& state, uint8_t& src) {
+inline void Disassembler8080::MOV_SRC(State8080& state, uint8_t& src) const noexcept {
     state.memory[static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l  )] = src;
 }
-inline void Disassembler8080::MOV_DST(State8080& state, uint8_t& dst) {
+inline void Disassembler8080::MOV_DST(State8080& state, uint8_t& dst) const noexcept {
     dst = state.memory[static_cast<uint16_t>((static_cast<uint16_t>(state.h) << 8) | state.l  )];
 }
 
 // Pop memory in the stack to the register pair regPair1 & regPair2
-inline void Disassembler8080::POP(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+inline void Disassembler8080::POP(State8080& state, uint8_t& regPair1, uint8_t& regPair2) const noexcept {
     regPair2 = state.memory[state.stackPointer];
     regPair1 = state.memory[state.stackPointer + 1];
     state.stackPointer += 2;
 }
 
 // Push the register pair into the stack
-inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t& regPair2) {
+inline void Disassembler8080::PUSH(State8080& state, uint8_t& regPair1, uint8_t& regPair2) const noexcept {
     state.memory[state.stackPointer - 1] = regPair1;
     state.memory[state.stackPointer - 2] = regPair2;
     state.stackPointer -= 2;
 }
 
 // Add a register to the accumulator with the carry flag
-inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) const noexcept {
     uint16_t sum = state.a + reg + state.condFlags.carry;
     state.a = sum & 0xFF;
     setSign(state, sum);
@@ -371,7 +371,7 @@ inline void Disassembler8080::ADC(State8080& state, const uint8_t& reg) {
 }
 
 // Add a register to the accumulator
-inline void Disassembler8080::ADD(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::ADD(State8080& state, const uint8_t& reg) const noexcept {
     uint16_t sum = state.a + reg;
     state.a = sum & 0xFF;
     setSign(state, sum);
@@ -382,7 +382,7 @@ inline void Disassembler8080::ADD(State8080& state, const uint8_t& reg) {
 }
 
 // Subtract register from accumulator
-inline void Disassembler8080::SUB(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::SUB(State8080& state, const uint8_t& reg) const noexcept {
     uint8_t regComp = ~reg + 1; // produce two's complement using reg
     uint16_t sum = state.a + regComp;
     state.a = sum & 0xFF;
@@ -396,14 +396,14 @@ inline void Disassembler8080::SUB(State8080& state, const uint8_t& reg) {
 }
 
 // Subtract register from accumulator but with borrow
-inline void Disassembler8080::SBB(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::SBB(State8080& state, const uint8_t& reg) const noexcept {
     // Same thing as sub, but + carry bit is added to the reg first
     uint8_t newReg = reg + state.condFlags.carry;
     SUB(state, newReg);
 }
 
 // Binary XOR the register with the accumulator
-inline void Disassembler8080::XRA(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::XRA(State8080& state, const uint8_t& reg) const noexcept {
     state.a ^= reg;
     setParity(state, state.a);
     setZero(state, state.a);
@@ -413,7 +413,7 @@ inline void Disassembler8080::XRA(State8080& state, const uint8_t& reg) {
 }
 
 // Binary AND the register with the accumulator
-inline void Disassembler8080::ANA(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::ANA(State8080& state, const uint8_t& reg) const noexcept {
     state.a &= reg;
     setParity(state, state.a);
     setZero(state, state.a);
@@ -423,7 +423,7 @@ inline void Disassembler8080::ANA(State8080& state, const uint8_t& reg) {
 }
 
 // Binary OR the register with the accumulator
-inline void Disassembler8080::ORA(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::ORA(State8080& state, const uint8_t& reg) const noexcept {
     state.a |= reg;
     setParity(state, state.a);
     setZero(state, state.a);
@@ -434,7 +434,7 @@ inline void Disassembler8080::ORA(State8080& state, const uint8_t& reg) {
 
 // Subtract the register from the accumulator BUT do not modify the registers,
 // only modification of the flags
-inline void Disassembler8080::CMP(State8080& state, const uint8_t& reg) {
+inline void Disassembler8080::CMP(State8080& state, const uint8_t& reg) const noexcept {
     uint8_t regComp = ~reg + 1; // two's complement
     uint16_t sum = state.a + regComp;
     // carry is inversed
@@ -493,7 +493,7 @@ inline void Disassembler8080::RET(State8080& state, bool canRet) const noexcept 
     }
 }
 
-inline void Disassembler8080::RST(State8080& state, const uint8_t& resLoc) {
+inline void Disassembler8080::RST(State8080& state, const uint8_t& resLoc) const noexcept {
     uint16_t newAddress = 8 * resLoc;
     uint16_t returnAddress = state.programCounter + 3; // skip to the next instruction after this one
     state.memory[state.stackPointer - 1] = (returnAddress >> 8) & 0xFF; // store high bit

@@ -178,31 +178,31 @@ private:
 
 
     // functions that perform an opcode's operation using the registers themselves.
-    inline void LXI_D16(State8080&, uint8_t&, uint8_t&);
-    inline void DCR(State8080&, uint8_t&);
-    inline void INR(State8080&, uint8_t&);
-    inline void DAD(State8080&, uint8_t&, uint8_t&);
-    inline void MVI_D8(State8080&, uint8_t&);
-    inline void INX(uint8_t&, uint8_t&);
-    inline void DCX(uint8_t& regPair1, uint8_t& regPair2);
-    inline void MOV(uint8_t& dst, uint8_t& src);
-    inline void MOV_DST(State8080&, uint8_t& dst);// This function is only used for the H & L pair memory location as a src.
-    inline void MOV_SRC(State8080&, uint8_t& src); // H&L is the dst
-    inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2);
-    inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2);
+    inline void LXI_D16(State8080&, uint8_t&, uint8_t&) const noexcept;
+    inline void DCR(State8080&, uint8_t&) const noexcept;
+    inline void INR(State8080&, uint8_t&) const noexcept;
+    inline void DAD(State8080&, uint8_t&, uint8_t&) const noexcept;
+    inline void MVI_D8(State8080&, uint8_t&) const noexcept;
+    inline void INX(uint8_t&, uint8_t&) const noexcept;
+    inline void DCX(uint8_t& regPair1, uint8_t& regPair2) const noexcept;
+    inline void MOV(uint8_t& dst, uint8_t& src) const noexcept;
+    inline void MOV_DST(State8080&, uint8_t& dst) const noexcept;// This function is only used for the H & L pair memory location as a src.
+    inline void MOV_SRC(State8080&, uint8_t& src) const noexcept; // H&L is the dst
+    inline void POP(State8080&, uint8_t& regPair1, uint8_t& regPair2) const noexcept;
+    inline void PUSH(State8080&, uint8_t& regPair1, uint8_t& regPair2) const noexcept;
     inline void JUMP(State8080&, bool canJump) const noexcept;
     inline void CALL(State8080&, bool canJump) const noexcept;
     inline void RET(State8080&, bool canRet) const noexcept;
-    inline void RST(State8080&, const uint8_t& resNum);
+    inline void RST(State8080&, const uint8_t& resNum) const noexcept;
 
-    inline void ADD(State8080&, const uint8_t& reg);
-    inline void ADC(State8080&, const uint8_t& reg);
-    inline void SUB(State8080&, const uint8_t& reg);
-    inline void SBB(State8080&, const uint8_t& reg);
-    inline void XRA(State8080&, const uint8_t& reg);
-    inline void ANA(State8080&, const uint8_t& reg);
-    inline void ORA(State8080&, const uint8_t& reg);
-    inline void CMP(State8080&, const uint8_t& reg);
+    inline void ADD(State8080&, const uint8_t& reg) const noexcept;
+    inline void ADC(State8080&, const uint8_t& reg) const noexcept;
+    inline void SUB(State8080&, const uint8_t& reg) const noexcept;
+    inline void SBB(State8080&, const uint8_t& reg) const noexcept;
+    inline void XRA(State8080&, const uint8_t& reg) const noexcept;
+    inline void ANA(State8080&, const uint8_t& reg) const noexcept;
+    inline void ORA(State8080&, const uint8_t& reg) const noexcept;
+    inline void CMP(State8080&, const uint8_t& reg) const noexcept;
 
 };
 
