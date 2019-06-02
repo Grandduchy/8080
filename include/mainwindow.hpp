@@ -8,7 +8,6 @@
 #include <QSoundEffect>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
-#include "debugwindow.hpp"
 
 
 namespace Ui {
@@ -32,7 +31,6 @@ private:
     Disassembler8080 cpu;
     QMap<Qt::Key, bool> keyMap; // key map to determine if a specific key is on
     QTimer* timer; // timer used to loop running cycles
-    DebugWindow* debugWindow;
 
     uint32_t cpuSteps = 0; // the amount of times cpu has been executed
     static constexpr int width = 256;

@@ -18,8 +18,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     QSize sz(256 * reFac, 256 * reFac);
-    debugWindow = new DebugWindow();
-    //debugWindow->show();
     ui->centralWidget->setFixedSize(sz);
     ui->centralWidget->setMinimumSize(sz);
     ui->centralWidget->setMaximumSize(sz);
