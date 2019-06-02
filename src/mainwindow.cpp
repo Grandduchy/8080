@@ -17,7 +17,7 @@ int MainWindow::reFac = 2; // The resize factor
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-
+    this->setWindowTitle("Intel 8080 Space Invaders Emulator");
     // Every time timer goes off, runcycle will run
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
     delete ui;
+    delete infoWindow;
 }
 
 
@@ -251,6 +252,38 @@ void MainWindow::runCycle() {
     ++cpuSteps;
 }
 
+
+void changePainterColor(const int& x, const int& y, QPainter& painter) {
+    // Recall that x and y swaps, so for height we're looking at x and width at y
+    if (x >= 256 - 64 && x <= 256 - 40 ) { // Red
+        painter.setPen(Qt::red);
+        painter.setBrush(Qt::red);
+    }
+    else if (x >= 0  && x <= 72) { // Green, there are two subdivisions of this
+
+        if (x >= 0 && x <= 14) { // The lower half that has the subdivisons
+
+            if (y >= 16 && y <= 134) {
+                painter.setPen(Qt::green);
+                painter.setBrush(Qt::green);
+            }
+            else {
+                // The two subdivisions that are white instead of green.
+                painter.setPen(Qt::white);
+                painter.setBrush(Qt::white);
+            }
+        } // Upper half non subdivision, always green
+        else {
+            painter.setPen(Qt::green);
+            painter.setBrush(Qt::green);
+        }
+    }
+    else {
+        painter.setPen(Qt::white);
+        painter.setBrush(Qt::white);
+    }
+}
+
 void MainWindow::paint() {
     static constexpr int yOffset = 40; // the amount the window is displayed by y for the screen to be visible
     QPainter painter(this);
@@ -272,6 +305,8 @@ void MainWindow::paint() {
             for (int shift = 0; shift != 8; shift++) {
                 bool bit = (byte >> shift) & 1;
                 if (bit) {
+                    changePainterColor(x, y, painter); // uncomment this line for no color
+
                    // painter.drawRect((x+shift) * reFac, y * reFac + yOffset, reFac, reFac); <- original drawRect without rotation
                    // because screen is rotated x becomes y, y becomes x, screen is also off the screen on the top of the window because of this
                    // x paramater then must subtract y's total height
