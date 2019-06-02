@@ -8,7 +8,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 
 SOURCES += \
-        src/debugwindow.cpp \
         src/mainwindow.cpp \
         src/ConditionFlags.cpp \
         src/Disassembler8080.cpp \
@@ -22,8 +21,7 @@ HEADERS += \
     include/Disassembler8080.hpp \
     include/State8080.hpp \
     include/mainwindow.hpp \
-    include/tester.h \
-    include/debugwindow.hpp
+    include/tester.h
 
 INCLUDEPATH += \
     include/
@@ -32,8 +30,7 @@ RESOURCES += \
     resources.qrc
 
 FORMS += \
-    forms/mainwindow.ui \
-    forms/debugwindow.ui
+    forms/mainwindow.ui
 
 
 # Default rules for deployment.
