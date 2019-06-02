@@ -17,6 +17,7 @@ int MainWindow::reFac = 2; // The resize factor
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+    infoWindow = new InfoWindow();
     QSize sz(256 * reFac, 256 * reFac);
     ui->centralWidget->setFixedSize(sz);
     ui->centralWidget->setMinimumSize(sz);
@@ -24,7 +25,12 @@ MainWindow::MainWindow(QWidget *parent) :
     // Every time timer goes off, runcycle will run
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::runCycle);
+    connect(ui->menuInfo, &QMenu::aboutToShow, this, [&](){
+        infoWindow->show();
+    });
     timer->start(0);
+
+    //connect()
 
     loadFile(":/roms/rsc/invaders");
     player = new QMediaPlayer(this);

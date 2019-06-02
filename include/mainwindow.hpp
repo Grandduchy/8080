@@ -8,6 +8,7 @@
 #include <QSoundEffect>
 #include "Disassembler8080.hpp"
 #include "State8080.hpp"
+#include "infowindow.hpp"
 
 
 namespace Ui {
@@ -26,7 +27,7 @@ protected:
     void virtual paintEvent(QPaintEvent* ) override;
 private:
     Ui::MainWindow * ui;
-
+    InfoWindow * infoWindow;
     State8080 state;
     Disassembler8080 cpu;
     QMap<Qt::Key, bool> keyMap; // key map to determine if a specific key is on
