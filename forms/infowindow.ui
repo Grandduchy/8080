@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>461</width>
-    <height>191</height>
+    <width>466</width>
+    <height>195</height>
    </rect>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>500</width>
+    <height>200</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -124,7 +130,7 @@
          <item>
           <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>K - Player 1 Start</string>
+            <string>K - Player 2 Start</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -154,7 +160,7 @@
          <item>
           <widget class="QLabel" name="label_13">
            <property name="text">
-            <string>I - Player 1 Shoot</string>
+            <string>I - Player 2 Shoot</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -192,7 +198,11 @@
      <item>
       <widget class="QLabel" name="label_14">
        <property name="text">
-        <string>View the project on &lt;a href=&quot;https://github.com/Grandduchy/8080&quot;&gt;github&lt;/a&gt;</string>
+        <string>View the project on
+https://github.com/Grandduchy/8080</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
