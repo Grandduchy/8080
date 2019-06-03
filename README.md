@@ -56,7 +56,7 @@ The CPU exercisers are available in source and compiled in 8080/rsc <br><br>
 After cloning to 8080/test, There are two ways to run the general tests <br>
 Option 1: Run the python file in the folder before making the tests<br>
 ```
-allowRunTests.py
+python allowRunTests.py
 ```
 Option 2: Modify 8080/include/tester.h, uncomment the two lines:
 ```
