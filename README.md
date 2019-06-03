@@ -1,6 +1,9 @@
 # 8080   
-An intel 8080 microprocessor emulation project run with space invaders &nbsp;&nbsp;&nbsp;&nbsp; [![Build Status](https://travis-ci.org/Grandduchy/8080.svg?branch=master)](https://travis-ci.org/Grandduchy/8080)
+An intel 8080 microprocessor emulation project run with space invaders &nbsp;&nbsp;&nbsp;&nbsp; [![Build Status](https://travis-ci.org/Grandduchy/8080.svg?branch=master)](https://travis-ci.org/Grandduchy/8080) <br>
 
+<p align = "center">
+  <img src="demo.png"/>
+</p>
 
 ## Getting Started
 
